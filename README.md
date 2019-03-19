@@ -1,21 +1,5 @@
-### some notes
+### LHYRA: Learned HYbrid Recursive Algorithms
 
-potential applications:
- - sorting
- - btrees
- - pathfinding
- - matrix multiplication
- - more?
+We propose a framework for automatically learning recursive algorithms and data structures for arbitrary data distributions and optimization criteria. Our ideas are loosely inspired by Prof. Kraska’s work on learned B-Trees and the Recursive Model Index (RMI); we conceive of this project as a sort of generalization of this idea to most recursive data-structures and algorithms.
 
-Elements:
- - Optimizer
-   - Can set value function: time, memory or arbitrary function on solution
- - Feature Extractor
-   - Eg for sorting: orderdness, length, etc
-   - Goal is to balance time to extract features and usefullness of features
- - Data Generator
-   - Generates "training set" of problems (eg unsorted lists, graphs, matrices)
-   - Alternatively could just pass in training set
- - Bag of solutions
-   - Includes call to subproblem and reduction
-   - Can have parameters, changed by optimizer
+More information can be found in `proposal.pdf`.
