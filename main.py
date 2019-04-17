@@ -46,9 +46,10 @@ class Optimizer(ABC):
 	def __init__(self, solvers, data, extractor):
 		pass
 
-	# Train the classifier on the data.
+	# Train the classifier on the data, given a hook into
+	# the Lhyra object's eval method.
 	@abstractmethod
-	def train(self):
+	def train(self, eval_method):
 		pass
 
 	# Pick and parametrize a solver from the bag of solvers.
@@ -66,7 +67,7 @@ class Lhyra:
 
 	# Train the already instantiated optimizer.
 	def train(self):
-		self.optimizer.train()
+		self.optimizer.train(self.eval)
 
 	# Eval on data. Ask the optimizer to pick and parametrize a solver
 	# given a set of features, then evaluate it on the data, providing
