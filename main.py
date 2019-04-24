@@ -18,7 +18,7 @@ class GradientParameter:
 
 class DataStore(ABC):
     @abstractmethod
-    def get_data(self, batch_size: int) -> List[Any]:
+    def get_data(self, batch_size: int) -> List:
         """
         Return a randomly sampled data batch of batch_size.
         :param batch_size: The amount of data returned.
@@ -29,9 +29,9 @@ class DataStore(ABC):
 
 class Solver:
     def __init__(self,
-                 method: Callable[[DataStore,
+                 method: Callable[[Any,
                                    Callable,
-                                   Dict[str, Any]], DataStore],
+                                   Dict[str, Any]], Any],
                  abstract_parameters: Dict[str, Any]):
         """
         Instantiate a solver.
@@ -42,15 +42,13 @@ class Solver:
         self.parameters = abstract_parameters
 
     def parametrized(self, parameters: Dict[str, Any]) -> \
-            Callable[[DataStore, Callable], DataStore]:
+            Callable[[Any, Callable], Any]:
         """
         Parametrizes self.method.
         :param parameters: A dict of parameters to values.
         :return: A a function which calls self.method with parameters applied.
         """
-        return lambda data_store, hook: self.method(data_store,
-                                                    hook,
-                                                    parameters)
+        return lambda data, hook: self.method(data, hook, parameters)
 
 
 class FeatureExtractor(ABC):
@@ -67,7 +65,7 @@ class FeatureExtractor(ABC):
         pass
 
     @abstractmethod
-    def __call__(self, data: Any) -> List[Any]:
+    def __call__(self, data: Any) -> List:
         """
         Call extractor on given data.
         :param data: A piece of data to extract the parameters of.
@@ -100,7 +98,7 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
-    def solver(self, features: List[Any]) -> Solver:
+    def solver(self, features: List) -> Solver:
         """
         Pick and parametrize a solver from the bag of solvers.
         :param features: Features provided to inform solver choice.
