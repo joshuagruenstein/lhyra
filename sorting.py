@@ -106,7 +106,35 @@ def quick_sort(data: List, hook: Callable, _: Dict[str, Any]):
     if len(p_data) <= 1: return p_data
     pi = partition(p_data)
     return hook(p_data[:pi])+[p_data[pi]]+hook(p_data[pi+1:])
-    
+
+
+def counting_sort(data, mod):
+    """
+    :param data: The list to be sorted.
+    :param mod: exp(index of interest)
+    """
+    buckets = [[] for _ in range(10)]
+
+    for d in data:
+        buckets[d//mod % 10].append(d)
+
+    return sum(buckets, [])
+
+
+def radix_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
+    """
+    :param data: The list to be sorted.
+    :param hook: The function used for recursive calls.
+    :param _: Unused parameters.
+    :return: A sorted list.
+    """
+    max_element = max(data)
+    mod = 1
+    while mod < max_element:
+        data = counting_sort(data, mod)
+        mod *= 10
+
+    return data
     
     
 # Poor man's unit testing
@@ -116,8 +144,8 @@ if __name__ == '__main__':
     merge_hook = lambda t: merge_sort(t, merge_hook, None)
     insertion_hook = lambda t: insertion_sort(t, None, None)
     quick_hook = lambda t: quick_sort(t, quick_hook, None)
-    
-    print(quick_sort([8,7,6,5,4,3,2,1], quick_hook, None))
+    radix_hook = lambda t: radix_sort(t, radix_sort, None)
+    print(radix_sort([8,7,6,5,4,3,2,1], quick_hook, None))
     
     from random import shuffle, randint
     
@@ -133,4 +161,6 @@ if __name__ == '__main__':
         assert(quick_sort(test_list, quick_hook, None) == expected)
         assert(quick_sort(test_list, merge_hook, None) == expected)
         assert(quick_sort(test_list, insertion_hook, None) == expected)
+        assert(radix_sort(test_list, None, None) == expected)
+
     print('All tests passed in', time()-t)
