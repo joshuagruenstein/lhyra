@@ -11,7 +11,7 @@ solvers = [
     Solver(quick_sort, [])
 ]
 
-lhyra = Lhyra(solvers, data, SortFeatureExtractor(), SAOptimizer)
+lhyra = Lhyra(solvers, data, SortFeatureExtractor(), PolicyLinearOptimizer)
 
 lhyra.train(iters=1000)
 

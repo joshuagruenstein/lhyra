@@ -1,4 +1,4 @@
-import torch
+#import torch
 import numpy as np
 from tqdm import tqdm
 from typing import Any, List
@@ -9,13 +9,14 @@ from functools import reduce
 from copy import deepcopy
 from math import exp
 
+"""
 class PolicyLinearOptimizer(Optimizer):
     def __init__(self, lhyra: Lhyra, gamma: float=0.99):
-        """
+        ""
         Initialize an optimizer.
         :param lhyra: A Lhyra instance to optimize.
         :param gamma: Discount factor (default 0.99)
-        """
+        ""
         
         super().__init__(lhyra)
 
@@ -36,13 +37,13 @@ class PolicyLinearOptimizer(Optimizer):
         self.saved_log_probs = []
 
     def train(self, iters: int=1000, plot=False):
-        """
+        ""
         Train the classifier on the data, given a hook into
         the Lhyra object's eval method.
         
         :param iters: Number of training iterations to run.
         :param plot: Show a plot.
-        """
+        ""
 
         data = self.lhyra.data_store.get_data(iters)
 
@@ -85,11 +86,11 @@ class PolicyLinearOptimizer(Optimizer):
 
 
     def solver(self, features: List) -> Solver:
-        """
+        ""
         Pick and parametrize a solver from the bag of solvers.
         :param features: Features provided to inform solver choice.
         :return: The Solver best suited given the features provided.
-        """
+        ""
 
         state = torch.FloatTensor(features).unsqueeze(0)
         probs = self.policy(state)
@@ -103,9 +104,10 @@ class PolicyLinearOptimizer(Optimizer):
             print(self.lhyra.solvers[action.item()])
 
         return self.lhyra.solvers[action.item()].parametrized({})
-        
-def SAOptimizer(Optimizer):
-    def __init__(self, lhyra: Lhyra, agg: float=0.5):
+"""
+
+class SAOptimizer(Optimizer):
+    def __init__(self, lhyra: Lhyra, agg: float=2):
         """
         Initialize an optimizer.
         :param lhyra: A Lhyra instance to optimize.
@@ -114,15 +116,13 @@ def SAOptimizer(Optimizer):
         
         super().__init__(lhyra)
         
-        self.lhyra = lyra
+        self.lhyra = lhyra
         
-        self.policy = [[random() for t in 2**len(lhyra.extractor.shape[0])] for s in lhyra.solvers]: # Assuming 1D feature vect
+        self.policy = [[random() for t in range(2**lhyra.extractor.shape[0])] for s in lhyra.solvers] # Assuming 1D feature vect
 
         self.agg = agg # Aggressiveness of training parameters
-
         
-        
-    def train(self, iters: int=1000, sample=100, plot=False):
+    def train(self, iters: int=1000, sample: int=100, plot=False):
         """
         Train the classifier on the data, given a hook into
         the Lhyra object's eval method.
@@ -148,7 +148,7 @@ def SAOptimizer(Optimizer):
                 time += self.lhyra.times[0] # Get the total time
             times.append(time)
                 
-            if time < self.prev_time or random() < temperature:
+            if time < self.prev_time:# or random() < temperature:
                 self.prev_policy = deepcopy(self.policy)
                 self.prev_time = time
                 
@@ -156,6 +156,8 @@ def SAOptimizer(Optimizer):
             self.policy = [[t+(self.agg*random()-self.agg)*(1-i/iters) for t in s] for s in self.prev_policy]
         
         self.policy = self.prev_policy # Don't use the last one, use the second-to-last
+        
+        print(self.policy)
 
         plt.plot(range(iters), times)
 
@@ -169,10 +171,10 @@ def SAOptimizer(Optimizer):
         :return: The Solver best suited given the features provided.
         """
 
-        ans = max(self.policy, self.key=lambda s: sum([reduce([features[n] for n in range(len(features)) if i&(2**n)],
-                            lambda x, y: x*y) for i, t in enumerate(s)]))
-        
+        ans = max(list(range(len(self.policy))), key=lambda s: sum([reduce(lambda x, y: x*y,
+                        [features[n] for n in range(len(features)) if i&(2**n)]+[1])*t for i, t in enumerate(self.policy[s])]))
+                        
         if self.lhyra.vocal:
-            print(ans)
+            print(self.lhyra.solvers[ans])
 
-        return ans
+        return self.lhyra.solvers[ans].parametrized({})
