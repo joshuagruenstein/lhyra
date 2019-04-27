@@ -26,6 +26,24 @@ class DataStore(ABC):
         """
         pass
 
+class DataGenerator(DataStore):
+    def __init__(self, method: Callable[[int], List]):
+        """
+        Create a data generator given a function that takes a batch
+        size and returns a bunch of datum.
+        :param method: The data generation method.
+        """
+        self.method = method
+
+    def get_data(self, batch_size: int) -> List:
+        """
+        Return a randomly sampled data batch of batch_size.
+        :param batch_size: The amount of data returned.
+        :return: A list of data.
+        """
+
+        return [self.method() for _ in range(batch_size)]
+
 
 class Solver:
     def __init__(self,
@@ -49,6 +67,14 @@ class Solver:
         :return: A a function which calls self.method with parameters applied.
         """
         return lambda data, hook: self.method(data, hook, parameters)
+
+    def __repr__(self):
+        """
+        Pretty printer.
+        :return: A string representation of the solver.
+        """
+
+        return "<Solver: " + self.method.__name__ + ">"
 
 
 class FeatureExtractor(ABC):
@@ -123,18 +149,14 @@ class Lhyra:
 
         self.optimizer = optimizer(self)
 
+        self.train = self.optimizer.train
+
     def clear(self):
         """
         Clear training metadata from Lhyra instance, eg self.times.
         """
 
         self.times.clear()
-
-    def train(self):
-        """
-        Train the already instantiated optimizer.
-        """
-        self.optimizer.train()
 
     def eval(self, data: Any) -> Any:
         """
@@ -146,8 +168,8 @@ class Lhyra:
         """
         start_time = time()
 
-        sol = self.optimizer.solver(self.extractor(data))(data, self)
+        sol = self.optimizer.solver(self.extractor(data))(data, self.eval)
 
-        self.times.append(time() - start_time())
+        self.times.append(time() - start_time)
 
         return sol

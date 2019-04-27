@@ -1,7 +1,17 @@
 from typing import Any, Callable, Dict, List
 from lhyra import Solver, FeatureExtractor
 from math import log2
+from random import random
 
+def random_list(max_length: int=10000):
+    """
+    Create a random list of values between 0 and 1 of lengths
+    between and max_length.
+    :param max_length: The maximum size of list to be generated.
+    :return: The generated list.
+    """
+
+    return [random() for _ in range(max_length)]
 
 class SortFeatureExtractor(FeatureExtractor):
     @property
@@ -18,7 +28,7 @@ class SortFeatureExtractor(FeatureExtractor):
         :param data: A piece of data to extract the parameters of.
         :return: Floats between 0 and 1 of shape self.shape.
         """
-        return 1/(log2(len(data))+1)
+        return [1/(log2(len(data))+1)]
 
         
 def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:

@@ -1,7 +1,7 @@
 import torch
 import numpy as np
-
-from typing import Any, Callable, Dict, List
+from tqdm import tqdm
+from typing import Any, List
 from lhyra import Optimizer, Lhyra, Solver
 
 class PolicyLinearOptimizer(Optimizer):
@@ -18,11 +18,12 @@ class PolicyLinearOptimizer(Optimizer):
 
         self.policy = torch.nn.Sequential(
             torch.nn.Linear(lhyra.extractor.shape[0], len(lhyra.solvers)),
-            torch.nn.Softmax()
+            torch.nn.Softmax(dim=0)
         )
 
-        self.opt = torch.optim.Adam(self.policy.parameters)
+        self.opt = torch.optim.Adam(self.policy.parameters())
         self.eps = np.finfo(np.float32).eps.item()
+        self.saved_log_probs = []
 
     def train(self, iters: int=1000):
         """
@@ -34,7 +35,7 @@ class PolicyLinearOptimizer(Optimizer):
 
         data = self.lhyra.data_store.get_data(iters)
 
-        for episode, datum in enumerate(data):
+        for episode, datum in enumerate(tqdm(data)):
             self.lhyra.clear()
             self.lhyra.eval(datum)
             
@@ -76,4 +77,4 @@ class PolicyLinearOptimizer(Optimizer):
 
         self.saved_log_probs.append(m.log_prob(action))
 
-        return self.solvers[action.item()]
+        return self.lhyra.solvers[action.item()].parametrized({})
