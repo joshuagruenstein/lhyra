@@ -3,6 +3,7 @@ from lhyra import Solver, FeatureExtractor
 from math import log2
 from random import random
 
+
 def random_list(max_length: int=10000):
     """
     Create a random list of values between 0 and 1 of lengths
@@ -12,6 +13,7 @@ def random_list(max_length: int=10000):
     """
 
     return [random() for _ in range(max_length)]
+
 
 class SortFeatureExtractor(FeatureExtractor):
     @property
@@ -82,6 +84,7 @@ def insertion_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
             
     return sorted_data
 
+
 # Taken from https://www.geeksforgeeks.org/quick-sort/
 def quick_sort(data: List, hook: Callable, _: Dict[str, Any]):
     # Partitions in-place and returns the appropriate position.
@@ -103,6 +106,8 @@ def quick_sort(data: List, hook: Callable, _: Dict[str, Any]):
     if len(p_data) <= 1: return p_data
     pi = partition(p_data)
     return hook(p_data[:pi])+[p_data[pi]]+hook(p_data[pi+1:])
+    
+    
     
 # Poor man's unit testing
 if __name__ == '__main__':
@@ -129,4 +134,3 @@ if __name__ == '__main__':
         assert(quick_sort(test_list, merge_hook, None) == expected)
         assert(quick_sort(test_list, insertion_hook, None) == expected)
     print('All tests passed in', time()-t)
-    
