@@ -1,6 +1,5 @@
 from typing import Any, Callable, Dict, List
 
-
 def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     """
     :param data: The list to be sorted.
