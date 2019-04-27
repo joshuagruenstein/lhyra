@@ -4,7 +4,7 @@ from math import log2
 from random import random
 
 
-def random_list(max_length: int=10000):
+def random_list(max_length: int=1000):
     """
     Create a random list of values between 0 and 1 of lengths
     between and max_length.

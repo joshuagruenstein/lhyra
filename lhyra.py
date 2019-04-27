@@ -146,6 +146,7 @@ class Lhyra:
         self.data_store = data_store
         self.solvers = solvers
         self.times = []
+        self.vocal = False
 
         self.optimizer = optimizer(self)
 
@@ -158,7 +159,7 @@ class Lhyra:
 
         self.times.clear()
 
-    def eval(self, data: Any) -> Any:
+    def eval(self, data: Any, vocal: bool=False) -> Any:
         """
         Eval on data. Ask the optimizer to pick and parametrize a solver
         given a set of features, then evaluate it on the data, providing
@@ -166,10 +167,20 @@ class Lhyra:
         :param data: The data to evaluate on.
         :return: A solution.
         """
+
+        if vocal:
+            self.vocal = True
+
+        time_slot = len(self.times)
+        self.times.append(None)
+
         start_time = time()
 
         sol = self.optimizer.solver(self.extractor(data))(data, self.eval)
 
-        self.times.append(time() - start_time)
+        self.times[time_slot] = time() - start_time
+
+        if vocal:
+            self.vocal = False
 
         return sol

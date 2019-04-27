@@ -1,21 +1,22 @@
-from sorting import SortFeatureExtractor, merge_sort, insertion_sort, random_list
+from sorting import SortFeatureExtractor, merge_sort, insertion_sort, quick_sort, random_list
 from policy import PolicyLinearOptimizer
 from lhyra import Lhyra, Solver, DataGenerator
 from time import time
 
-data = DataGenerator(random_list)
+data = DataGenerator(lambda: sorted(random_list()))
 
 solvers = [
     Solver(merge_sort, []),
-    Solver(insertion_sort, [])
+    Solver(insertion_sort, []),
+    Solver(quick_sort, [])
 ]
 
 lhyra = Lhyra(solvers, data, SortFeatureExtractor(), PolicyLinearOptimizer)
 
-lhyra.train(iters=5)
+lhyra.train(iters=1000)
 
 def bench():
-    ex = random_list()[:1000]
+    ex = sorted(random_list())
 
     start = time()
 
@@ -24,7 +25,7 @@ def bench():
     print("Py time:", time()-start)
     start = time()
 
-    lh = lhyra.eval(ex)
+    lh = lhyra.eval(ex, vocal=True)
 
     print("Lhyra time:", time()-start)
     start = time()
@@ -39,5 +40,12 @@ def bench():
     merge = insertion_sort(ex, insert_hook, None)
 
     print("Insertion time:", time()-start)
+    start = time()
+
+    quick_hook = lambda t: quick_sort(t, quick_hook, None)
+    merge = quick_sort(ex, quick_hook, None)
+
+    print("Quick time:", time()-start)
+
 
 bench()
