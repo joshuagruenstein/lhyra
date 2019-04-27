@@ -58,7 +58,7 @@ def insertion_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     :return: A sorted list.
     """
     if len(data) == 1:
-        return data
+        return data[:]
         
     sorted_data = data[:]
 
@@ -75,40 +75,48 @@ def insertion_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
 # Taken from https://www.geeksforgeeks.org/quick-sort/
 def quick_sort(data: List, hook: Callable, _: Dict[str, Any]):
     # Partitions in-place and returns the appropriate position.
-    def partition(data, low, high):
-        # pivot (Element to be placed at right position)
-        pivot = data[high]
-        i = low  # Index of smaller element
-        for j in range(low, high):
-            if data[j] <= pivot:
-                temp = data[i]
-                data[i] = data[j]
-                data[j] = temp
+    def partition(data):
+        pivot = data[len(data)//2]
+        i, j = 0, len(data)-1
+        while True:
+            while data[i] < pivot:
                 i += 1
-        temp = data[i+1]
-        data[i+1] = data[high]
-        data[high] = temp
-        return (i + 1)
-        
-    pi = partition(data, 0, len(data)-1)
-    print(data)
-    return hook(data[:pi-1])+[data[pi]]+hook(data[pi+1:])
+            while data[j] > pivot:
+                j -= 1
+            if i >= j: return j
+            
+            temp = data[i]
+            data[i] = data[j]
+            data[j] = temp
+            
+    p_data = data[:]
+    if len(p_data) <= 1: return p_data
+    pi = partition(p_data)
+    return hook(p_data[:pi-1])+[p_data[pi]]+hook(p_data[pi+1:])
     
 # Poor man's unit testing
 if __name__ == '__main__':
+    from time import time
+
     merge_hook = lambda t: merge_sort(t, merge_hook, None)
     insertion_hook = lambda t: insertion_sort(t, None, None)
+    quick_hook = lambda t: quick_sort(t, quick_hook, None)
     
-    print(quick_sort([8,7,6,5,4,3,2,1], merge_hook, None))
+    #print(quick_sort([8,7,6,5,4,3,2,1], merge_hook, None))
     
     from random import shuffle, randint
     
-    for test in range(10):
+    t = time()
+    for test in range(100):
         test_list = list(range(randint(3,1000)))
         expected = sorted(test_list)
     
         assert(insertion_sort(test_list, None, None) == expected)
         assert(merge_sort(test_list, merge_hook, None) == expected)
+        assert(merge_sort(test_list, quick_hook, None) == expected)
         assert(merge_sort(test_list, insertion_hook, None) == expected)
-    print('All tests passed')
+        assert(quick_sort(test_list, quick_hook, None) == expected)
+        assert(quick_sort(test_list, merge_hook, None) == expected)
+        assert(quick_sort(test_list, insertion_hook, None) == expected)
+    print('All tests passed in', time()-t)
     
