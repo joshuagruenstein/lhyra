@@ -2,6 +2,7 @@ from typing import Any, Callable, Dict, List
 from lhyra import Solver, FeatureExtractor
 from math import log2
 
+
 class SortFeatureExtractor(FeatureExtractor):
     @property
     def shape(self) -> List[int]:
@@ -19,6 +20,7 @@ class SortFeatureExtractor(FeatureExtractor):
         """
         return 1/(log2(len(data))+1)
 
+        
 def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     """
     :param data: The list to be sorted.

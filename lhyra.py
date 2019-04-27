@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List
-
+from time import time
 
 class GradientParameter:
     """
@@ -75,25 +75,21 @@ class FeatureExtractor(ABC):
 
 
 class Optimizer(ABC):
-    @abstractmethod
     def __init__(self,
-                 solvers: List[Solver],
-                 data_store: DataStore,
-                 extractor: FeatureExtractor):
+                 lhyra: 'Lhyra'):
         """
         Initialize an optimizer.
         :param solvers: A list of potential solvers.
         :param data_store: A DataStore which generates representative data.
         :param extractor: An extractor which generates informative features.
         """
-        pass
+        
+        self.lhyra = lhyra
 
     @abstractmethod
-    def train(self, eval_method):
+    def train(self):
         """
-        Train the classifier on the data, given a hook into
-        the Lhyra object's eval method.
-        :param eval_method: Eval method of the associated Lhyra object.
+        Train the classifier on the data.
         """
         pass
 
@@ -121,20 +117,37 @@ class Lhyra:
         :param optimizer: An untrained optimizer.
         """
         self.extractor = extractor
-        self.optimizer = optimizer(solvers, data_store, extractor)
+        self.data_store = data_store
+        self.solvers = solvers
+        self.times = []
+
+        self.optimizer = optimizer(self)
+
+    def clear(self):
+        """
+        Clear training metadata from Lhyra instance, eg self.times.
+        """
+
+        self.times.clear()
 
     def train(self):
         """
         Train the already instantiated optimizer.
         """
-        self.optimizer.train(self.eval)
+        self.optimizer.train()
 
     def eval(self, data: Any) -> Any:
         """
         Eval on data. Ask the optimizer to pick and parametrize a solver
         given a set of features, then evaluate it on the data, providing
-        a hook back into this method for recursive subcalls.
+        a hook back into this object for recursive subcalls.
         :param data: The data to evaluate on.
         :return: A solution.
         """
-        return self.optimizer.solver(self.extractor(data))(data, self.eval)
+        start_time = time()
+
+        sol = self.optimizer.solver(self.extractor(data))(data, self)
+
+        self.times.append(time() - start_time())
+
+        return sol
