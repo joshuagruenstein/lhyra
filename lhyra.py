@@ -172,6 +172,7 @@ class Lhyra:
             self.vocal = True
 
         time_slot = len(self.times)
+
         self.times.append(None)
 
         start_time = time()

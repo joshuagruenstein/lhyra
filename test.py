@@ -1,22 +1,22 @@
 from sorting import SortFeatureExtractor, merge_sort, insertion_sort, quick_sort, random_list
 from policy import PolicyLinearOptimizer
+from qlearn import ValueOptimizer
 from lhyra import Lhyra, Solver, DataGenerator
 from time import time
 
-data = DataGenerator(lambda: sorted(random_list()))
+data = DataGenerator(random_list)
 
 solvers = [
     Solver(merge_sort, []),
-    Solver(insertion_sort, []),
-    Solver(quick_sort, [])
+    Solver(insertion_sort, [])
 ]
 
-lhyra = Lhyra(solvers, data, SortFeatureExtractor(), PolicyLinearOptimizer)
+lhyra = Lhyra(solvers, data, SortFeatureExtractor(), ValueOptimizer)
 
-lhyra.train(iters=1000)
+lhyra.train(iters=100)
 
 def bench():
-    ex = sorted(random_list())
+    ex = random_list()
 
     start = time()
 
