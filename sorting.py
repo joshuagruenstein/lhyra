@@ -28,7 +28,7 @@ class SortFeatureExtractor(FeatureExtractor):
         :param data: A piece of data to extract the parameters of.
         :return: Floats between 0 and 1 of shape self.shape.
         """
-        return [1/(log2(len(data))+1)]
+        return [1/(log2(len(data)+2))]
 
         
 def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
@@ -102,7 +102,7 @@ def quick_sort(data: List, hook: Callable, _: Dict[str, Any]):
     p_data = data[:]
     if len(p_data) <= 1: return p_data
     pi = partition(p_data)
-    return hook(p_data[:pi-1])+[p_data[pi]]+hook(p_data[pi+1:])
+    return hook(p_data[:pi])+[p_data[pi]]+hook(p_data[pi+1:])
     
 # Poor man's unit testing
 if __name__ == '__main__':
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     insertion_hook = lambda t: insertion_sort(t, None, None)
     quick_hook = lambda t: quick_sort(t, quick_hook, None)
     
-    #print(quick_sort([8,7,6,5,4,3,2,1], merge_hook, None))
+    print(quick_sort([8,7,6,5,4,3,2,1], quick_hook, None))
     
     from random import shuffle, randint
     
