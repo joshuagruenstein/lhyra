@@ -4,6 +4,8 @@ from tqdm import tqdm
 from typing import Any, List
 from lhyra import Optimizer, Lhyra, Solver
 import matplotlib.pyplot as plt
+from time import time
+from random import random
 
 class ValueOptimizer(Optimizer):
     def __init__(self, lhyra: Lhyra):
@@ -15,14 +17,20 @@ class ValueOptimizer(Optimizer):
         
         super().__init__(lhyra)
 
-        self.value = torch.nn.Sequential(
-            torch.nn.Linear(len(self.lhyra.solvers)+lhyra.extractor.shape[0], 1)
-        )
+        self.values = [
+            torch.nn.Linear(lhyra.extractor.shape[0], 1)
+            for i in range(len(lhyra.solvers))
+        ]
 
-        self.opt = torch.optim.Adam(self.value.parameters(), lr=1e-2)
+        self.opts = [
+            torch.optim.Adam(value.parameters(), lr=1e-2)
+            for value in self.values
+        ]
+
         self.loss_fn = torch.nn.MSELoss(reduction='sum')
         self.epochs = []
         self.training = False
+        self.gen_params()
 
 
     def train(self, iters: int=1000, plot=False):
@@ -33,47 +41,56 @@ class ValueOptimizer(Optimizer):
         :param iters: Number of training iterations to run.
         :param plot: Show a plot.
         """
-
-        self.training = True
         
+        self.training = True
+
         data = self.lhyra.data_store.get_data(iters)
 
         totals = []
-        errors = []
+        self.p = 1
         for episode, datum in enumerate(tqdm(data)):
+            self.p = 0.99 * self.p
+
             self.lhyra.clear()
             self.epochs.clear()
             
             self.lhyra.eval(datum)
+            
             totals.append(self.lhyra.times[0])
 
-            x = torch.stack(self.epochs)
-            y = torch.FloatTensor(self.lhyra.times)
+            for x, y in zip(self.epochs, self.lhyra.times):
+                action, features = x
 
-            y_pred = self.value(x)
-            loss = self.loss_fn(y_pred, y)
-            errors.append(loss)
+                out = torch.FloatTensor([y])
+                inp = torch.FloatTensor(features)
 
-            self.value.zero_grad()
-            loss.backward()
-            self.opt.step()
+                out_pred = self.values[action](inp)
+                loss = self.loss_fn(out_pred, out)
+
+                self.values[action].zero_grad()
+                loss.backward()
+                self.opts[action].step()
+
+            self.gen_params()
 
         vals = [
             sum(totals[i:i + iters//100])/(iters//100)
             for i in range(0,iters,iters//100)
         ]
 
-        errors = [
-            sum(errors[i:i + iters//100])/(iters//100)
-            for i in range(0,iters,iters//100)
-        ]
-
-        plt.plot(errors)
-
-        plt.show()
-
         self.training = False
 
+        plt.plot(vals)
+        plt.show()
+
+    def gen_params(self):
+        self.params = [
+            tuple(
+                param.data.item()
+                for name, param in value.named_parameters()
+                if param.requires_grad
+            ) for value in self.values
+        ]
 
     def solver(self, features: List) -> Solver:
         """
@@ -81,28 +98,29 @@ class ValueOptimizer(Optimizer):
         :param features: Features provided to inform solver choice.
         :return: The Solver best suited given the features provided.
         """
-
+        
         size = len(self.lhyra.solvers)
-        potential_actions = torch.FloatTensor([
-            [1 if j==i else 0 for j in range(size)] + features
-            for i in range(size)
-        ])
+        
+        values = [weight*features[0] + bias for weight, bias in self.params]
 
-        values = self.value(potential_actions).squeeze()
+        # values = []
+        # for state in potential_actions:
+        #     values.append(self.params['0.bias'][0] + sum(a*b for a,b in zip(state, self.params['0.weight'][0])))
 
         if self.training:
-            probs = torch.nn.functional.softmax(-values,dim=0)
+            values = torch.FloatTensor(values)
+
+            values -= values.min() - 1
+
+            probs = (1/values) / torch.sum(1/values)
 
             m = torch.distributions.Categorical(probs)
             action = m.sample().item()
 
-            self.epochs.append(torch.cat((
-                potential_actions[action][:-1],
-                torch.tensor(features)
-            )))
+            self.epochs.append((action, features))
         else:
-            val, index = values.min(0, keepdim=True)
-            action = index.item() 
+            action = values.index(min(values))
+            
 
         if self.lhyra.vocal:
             print(self.lhyra.solvers[action])

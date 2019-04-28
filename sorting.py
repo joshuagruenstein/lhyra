@@ -1,7 +1,7 @@
 from typing import Any, Callable, Dict, List
 from lhyra import Solver, FeatureExtractor
 from math import log2
-from random import random
+from random import random, shuffle
 
 
 def random_list(max_length: int=1000):
@@ -11,8 +11,9 @@ def random_list(max_length: int=1000):
     :param max_length: The maximum size of list to be generated.
     :return: The generated list.
     """
-
-    return [random() for _ in range(max_length)]
+    l = [i for i in range(max_length)]
+    shuffle(l)
+    return l
 
 
 class SortFeatureExtractor(FeatureExtractor):
@@ -128,6 +129,10 @@ def radix_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     :param _: Unused parameters.
     :return: A sorted list.
     """
+
+    if data == []:
+        return []
+
     max_element = max(data)
     mod = 1
     while mod < max_element:
