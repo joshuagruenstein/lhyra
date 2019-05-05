@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List
 from time import time
 
+
 class GradientParameter:
     """
     A sample parameter.
@@ -25,6 +26,7 @@ class DataStore(ABC):
         :return: A list of data.
         """
         pass
+
 
 class DataGenerator(DataStore):
     def __init__(self, method: Callable[[int], List]):
