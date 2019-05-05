@@ -9,35 +9,36 @@ import matplotlib.pyplot as plt
 from time import time
 from random import random, randint
 
+
 class LinOptimizer(Optimizer):
-    def __init__(self, lhyra: Lhyra, eps_bounds=(0.9,0.1)):
+    def __init__(self, lhyra: Lhyra, eps_bounds=(0.9, 0.1)):
         """
         Initialize an optimizer.
         :param lhyra: A Lhyra instance to optimize.
         :param gamma: Discount factor (default 0.99)
         """
-        
+
         super().__init__(lhyra)
 
-        self.regr = [linear_model.LinearRegression() for s in self.lhyra.solvers] # Could change models
+        self.regr = [linear_model.LinearRegression()
+                     for s in self.lhyra.solvers]  # Could change models
         for r in self.regr:
-            r.fit([[0 for n in range(lhyra.extractor.shape[0])]], [0]) # Initialize with 0s
-
+            # Initialize with 0s
+            r.fit([[0 for n in range(lhyra.extractor.shape[0])]], [0])
         self.eps_bounds = eps_bounds
 
         self.epochs = []
         self.training = False
 
-
     def train(self, iters: int=100, sample: int=40, plot=False):
         """
         Train the classifier on the data, given a hook into
         the Lhyra object's eval method.
-        
+
         :param iters: Number of training iterations to run.
         :param plot: Show a plot.
         """
-        
+
         self.training = True
 
         features = [[] for s in self.lhyra.solvers]
@@ -50,7 +51,7 @@ class LinOptimizer(Optimizer):
             totaltimes.append(0)
 
             # epsilon for eps-greedy policy
-            self.eps = self.eps_bounds[0] + (episode/(iters-1))*(self.eps_bounds[1]-self.eps_bounds[0])
+            self.eps = self.eps_bounds[0] + (episode/(iters-1)) * (self.eps_bounds[1]-self.eps_bounds[0])
 
             data = self.lhyra.data_store.get_data(sample)
             for datum in data:
@@ -86,7 +87,7 @@ class LinOptimizer(Optimizer):
 
         self.training = False
 
-        plt.plot(list(range(1,iters+1)), totaltimes)
+        plt.plot(list(range(1, iters+1)), totaltimes)
         plt.show()
 
     def solver(self, features: List) -> Solver:
@@ -95,11 +96,11 @@ class LinOptimizer(Optimizer):
         :param features: Features provided to inform solver choice.
         :return: The Solver best suited given the features provided.
         """
-        
+
         size = len(self.lhyra.solvers)
 
         if self.training and random() < self.eps:
-            action = randint(0,size-1)
+            action = randint(0, size-1)
 
         else:
             values = [r.predict([features]) for r in self.regr]
