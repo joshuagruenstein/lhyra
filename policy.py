@@ -170,7 +170,13 @@ class SAOptimizer(Optimizer):
         :param features: Features provided to inform solver choice.
         :return: The Solver best suited given the features provided.
         """
-
+        
+        """
+        if self.lhyra.vocal:
+            for i in range(2**len(features)):
+                print([features[n] for n in range(len(features)) if i&(2**n)], self.policy[0][i])
+        """
+        
         ans = max(list(range(len(self.policy))), key=lambda s: sum([reduce(lambda x, y: x*y,
                         [features[n] for n in range(len(features)) if i&(2**n)]+[1])*t for i, t in enumerate(self.policy[s])]))
                         

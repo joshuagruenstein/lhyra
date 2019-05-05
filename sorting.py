@@ -1,7 +1,7 @@
 from typing import Any, Callable, Dict, List
 from lhyra import Solver, FeatureExtractor
 from math import log2
-from random import random
+from random import random, shuffle, randint
 
 
 def random_list(max_length: int=1000):
@@ -11,8 +11,10 @@ def random_list(max_length: int=1000):
     :param max_length: The maximum size of list to be generated.
     :return: The generated list.
     """
-
-    return [random() for _ in range(max_length)]
+    l = list(range(max_length))
+    if random() < 0.5: l.append(2**randint(10,1000))
+    shuffle(l)
+    return l
 
 
 class SortFeatureExtractor(FeatureExtractor):
@@ -22,7 +24,7 @@ class SortFeatureExtractor(FeatureExtractor):
         Get the output shape of the feature extractor.
         :return: A list of integers representing the output's dimensions.
         """
-        return [1] # Length, (mean, variance)?
+        return [2] # Length, (mean, variance)?
 
     def __call__(self, data: Any) -> List:
         """
@@ -30,7 +32,7 @@ class SortFeatureExtractor(FeatureExtractor):
         :param data: A piece of data to extract the parameters of.
         :return: Floats between 0 and 1 of shape self.shape.
         """
-        return [1/(log2(len(data)+2))]
+        return [log2(len(data)+1), log2(max(data)+1) if len(data)>=1 else 0]
 
         
 def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
@@ -40,8 +42,7 @@ def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     :param _: Unused parameters.
     :return: A sorted list.
     """
-    if len(data) == 1:
-        return data
+    if len(data) <= 1: return data
 
     sorted_first = hook(data[:len(data)//2])
     sorted_second = hook(data[len(data)//2:])
@@ -128,6 +129,7 @@ def radix_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     :param _: Unused parameters.
     :return: A sorted list.
     """
+    if len(data) <= 1: return data
     max_element = max(data)
     mod = 1
     while mod < max_element:
