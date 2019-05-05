@@ -20,7 +20,8 @@ class LinOptimizer(Optimizer):
         super().__init__(lhyra)
 
         self.regr = [linear_model.LinearRegression() for s in self.lhyra.solvers] # Could change models
-        self.regr.fit([0 for n in range(len(lhyra.extractor.shape[0]))], [0]) # Initialize with 0s
+        for r in self.regr:
+            r.fit([[0 for n in range(lhyra.extractor.shape[0])]], [0]) # Initialize with 0s
 
         self.eps_bounds = eps_bounds
 
@@ -28,7 +29,7 @@ class LinOptimizer(Optimizer):
         self.training = False
 
 
-    def train(self, iters: int=100, iterdata: int=40, plot=False):
+    def train(self, iters: int=100, sample: int=40, plot=False):
         """
         Train the classifier on the data, given a hook into
         the Lhyra object's eval method.
@@ -44,34 +45,35 @@ class LinOptimizer(Optimizer):
 
         totaltimes = []
 
-        for episode in enumerate(tqdm(iter)):
+        for episode in tqdm(range(iters)):
 
-        	totaltimes.append(0)
+            totaltimes.append(0)
 
-        	# epsilon for eps-greedy policy
-        	self.eps = self.eps_bounds[0] + (episode/(iter-1))*(self.eps_bounds[1]-self.eps_bounds[0])
+            # epsilon for eps-greedy policy
+            self.eps = self.eps_bounds[0] + (episode/(iters-1))*(self.eps_bounds[1]-self.eps_bounds[0])
 
-        	data = self.lhyra.data_store.get_data(iterdata)
-        	for datum in data:
+            data = self.lhyra.data_store.get_data(sample)
+            for datum in data:
 
-	            self.lhyra.eval(datum)
+                self.lhyra.eval(datum)
 
-	            totaltimes[-1] += self.lhyra.times[0]
-	            for (a, f), t in zip(self.epochs, self.lhyra.times):
-	            	feature_set[a].append(f)
-	            	times[a].append(t)
+                totaltimes[-1] += self.lhyra.times[0]
+                for (a, f), t in zip(self.epochs, self.lhyra.times):
+                    features[a].append(f)
+                    times[a].append(t)
 
-		        self.epochs.clear()
-	            self.lhyra.clear()
+                self.epochs.clear()
+                self.lhyra.clear()
 
-	        for a, r in enumerate(self.regr):
-            	r.train(features[a], times[a])
+            for a, r in enumerate(self.regr):
+                if len(features[a]) > 0:
+                    r.fit(features[a], times[a])
 
-           	totaltimes[-1] /= iterdata
+            totaltimes[-1] /= sample
 
         self.training = False
 
-        plt.plot(list(range(1,iter+1)), totaltimes)
+        plt.plot(list(range(1,iters+1)), totaltimes)
         plt.show()
 
     def solver(self, features: List) -> Solver:
@@ -82,21 +84,15 @@ class LinOptimizer(Optimizer):
         """
         
         size = len(self.lhyra.solvers)
-        
-        values = [weight*features[0] + bias for weight, bias in self.params]
-
-        # values = []
-        # for state in potential_actions:
-        #     values.append(self.params['0.bias'][0] + sum(a*b for a,b in zip(state, self.params['0.weight'][0])))
 
         if self.training and random() < self.eps:
-    		action = randint(0,len(self.lhyra.solvers)-1)
+            action = randint(0,size-1)
 
-    	else:
-	    	values = [r.predict(features) for r in self.regr]
-	    	action = np.argmin(values)
+        else:
+            values = [r.predict([features]) for r in self.regr]
+            action = np.argmin(values)
 
-    	if self.training:
+        if self.training:
             self.epochs.append((action, features))
 
         if self.lhyra.vocal:

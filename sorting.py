@@ -11,7 +11,10 @@ def random_list(max_length: int=1000):
     :param max_length: The maximum size of list to be generated.
     :return: The generated list.
     """
-    l = [i for i in range(max_length)]
+
+    # 50% of the time adds a really big number to slow down radix.
+    l = list(range(int(random()*max_length)))
+    if random() < 0.5: l.append(2**50)
     shuffle(l)
     return l
 
@@ -23,7 +26,7 @@ class SortFeatureExtractor(FeatureExtractor):
         Get the output shape of the feature extractor.
         :return: A list of integers representing the output's dimensions.
         """
-        return [1]  # Length, (mean, variance)?
+        return [2]  # Length, (mean, variance)?
 
     def __call__(self, data: Any) -> List:
         """
@@ -31,7 +34,7 @@ class SortFeatureExtractor(FeatureExtractor):
         :param data: A piece of data to extract the parameters of.
         :return: Floats between 0 and 1 of shape self.shape.
         """
-        return [1/(log2(len(data)+2))]
+        return [log2(len(data)+2), log2(max(data)+1) if len(data) > 0 else 0]
 
 
 def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:

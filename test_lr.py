@@ -1,5 +1,5 @@
 from sorting import SortFeatureExtractor, merge_sort, insertion_sort, quick_sort, radix_sort, random_list
-from policy import SAOptimizer
+from linreg import LinOptimizer
 from lhyra import Lhyra, Solver, DataGenerator
 from time import time
 
@@ -8,13 +8,13 @@ data = DataGenerator(lambda: random_list())
 solvers = [
     Solver(merge_sort, []),
     Solver(insertion_sort, []),
-    Solver(quick_sort, [])
+    Solver(quick_sort, []),
     Solver(radix_sort, [])
 ]
 
 lhyra = Lhyra(solvers, data, SortFeatureExtractor(), LinOptimizer)
 
-lhyra.train(iters=100, sample=10)
+lhyra.train(iters=100, sample=20)
 
 def bench():
     ex = random_list(1000)
@@ -47,6 +47,12 @@ def bench():
     merge = quick_sort(ex, quick_hook, None)
 
     print("Quick time:", time()-start)
+    start = time()
+
+    radix_hook = lambda t: quick_sort(t, radix_hook, None)
+    radix = radix_sort(ex, quick_hook, None)
+
+    print("Radix time:", time()-start)
 
 
 bench()
