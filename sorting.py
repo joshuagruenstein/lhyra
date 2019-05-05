@@ -32,9 +32,9 @@ class SortFeatureExtractor(FeatureExtractor):
         :param data: A piece of data to extract the parameters of.
         :return: Floats between 0 and 1 of shape self.shape.
         """
-        return [log2(len(data)+1), log2(max(data)+1) if len(data)>=1 else 0]
+        return [log2(len(data)+1), log2(max(data)+2) if len(data)>=1 else 0]
 
-        
+
 def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     """
     :param data: The list to be sorted.
@@ -72,7 +72,7 @@ def insertion_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     """
     if len(data) == 1:
         return data[:]
-        
+
     sorted_data = data[:]
 
     for i in range(len(sorted_data)-1):
@@ -82,7 +82,7 @@ def insertion_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
             sorted_data[j] = sorted_data[j+1]
             sorted_data[j+1] = temp
             j -= 1
-            
+
     return sorted_data
 
 
@@ -98,13 +98,14 @@ def quick_sort(data: List, hook: Callable, _: Dict[str, Any]):
             while data[j] > pivot:
                 j -= 1
             if i >= j: return j
-            
+
             temp = data[i]
             data[i] = data[j]
             data[j] = temp
-            
+
     p_data = data[:]
-    if len(p_data) <= 1: return p_data
+    if len(p_data) <= 1:
+        return p_data
     pi = partition(p_data)
     return hook(p_data[:pi])+[p_data[pi]]+hook(p_data[pi+1:])
 
@@ -130,6 +131,7 @@ def radix_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     :return: A sorted list.
     """
     if len(data) <= 1: return data
+
     max_element = max(data)
     mod = 1
     while mod < max_element:
@@ -137,8 +139,8 @@ def radix_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
         mod *= 10
 
     return data
-    
-    
+
+
 # Poor man's unit testing
 if __name__ == '__main__':
     from time import time

@@ -32,7 +32,7 @@ class PolicyLinearOptimizer(Optimizer):
                 print(name, param.data)
 
 
-        self.opt = torch.optim.Adam(self.policy.parameters())
+        self.opt = torch.optim.Adam(self.policy.parameters(), lr=1e-2)
         self.eps = np.finfo(np.float32).eps.item()
         self.saved_log_probs = []
 
