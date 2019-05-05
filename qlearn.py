@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from time import time
 from random import random
 
+
 class ValueOptimizer(Optimizer):
     def __init__(self, lhyra: Lhyra):
         """
@@ -14,7 +15,7 @@ class ValueOptimizer(Optimizer):
         :param lhyra: A Lhyra instance to optimize.
         :param gamma: Discount factor (default 0.99)
         """
-        
+
         super().__init__(lhyra)
 
         self.values = [
@@ -32,16 +33,15 @@ class ValueOptimizer(Optimizer):
         self.training = False
         self.gen_params()
 
-
     def train(self, iters: int=1000, plot=False):
         """
         Train the classifier on the data, given a hook into
         the Lhyra object's eval method.
-        
+
         :param iters: Number of training iterations to run.
         :param plot: Show a plot.
         """
-        
+
         self.training = True
 
         data = self.lhyra.data_store.get_data(iters)
@@ -53,9 +53,9 @@ class ValueOptimizer(Optimizer):
 
             self.lhyra.clear()
             self.epochs.clear()
-            
+
             self.lhyra.eval(datum)
-            
+
             totals.append(self.lhyra.times[0])
 
             for x, y in zip(self.epochs, self.lhyra.times):
@@ -75,7 +75,7 @@ class ValueOptimizer(Optimizer):
 
         vals = [
             sum(totals[i:i + iters//100])/(iters//100)
-            for i in range(0,iters,iters//100)
+            for i in range(0, iters, iters//100)
         ]
 
         self.training = False
@@ -98,14 +98,15 @@ class ValueOptimizer(Optimizer):
         :param features: Features provided to inform solver choice.
         :return: The Solver best suited given the features provided.
         """
-        
+
         size = len(self.lhyra.solvers)
-        
+
         values = [weight*features[0] + bias for weight, bias in self.params]
 
         # values = []
         # for state in potential_actions:
-        #     values.append(self.params['0.bias'][0] + sum(a*b for a,b in zip(state, self.params['0.weight'][0])))
+        #     values.append(self.params['0.bias'][0] +
+        #       sum(a*b for a,b in zip(state, self.params['0.weight'][0])))
 
         if self.training:
             values = torch.FloatTensor(values)
@@ -120,7 +121,6 @@ class ValueOptimizer(Optimizer):
             self.epochs.append((action, features))
         else:
             action = values.index(min(values))
-            
 
         if self.lhyra.vocal:
             print(self.lhyra.solvers[action])
