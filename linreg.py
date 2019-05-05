@@ -1,14 +1,16 @@
-from sklearn
+from sklearn import datasets, linear_model
+from sklearn.metrics import mean_squared_error, r2_score
+
 import numpy as np
 from tqdm import tqdm
 from typing import Any, List
 from lhyra import Optimizer, Lhyra, Solver
 import matplotlib.pyplot as plt
 from time import time
-from random import random
+from random import random, randint
 
-class ValueOptimizer(Optimizer):
-    def __init__(self, lhyra: Lhyra):
+class LinOptimizer(Optimizer):
+    def __init__(self, lhyra: Lhyra, eps_bounds=(0.9,0.1)):
         """
         Initialize an optimizer.
         :param lhyra: A Lhyra instance to optimize.
@@ -17,23 +19,16 @@ class ValueOptimizer(Optimizer):
         
         super().__init__(lhyra)
 
-        self.values = [
-            torch.nn.Linear(lhyra.extractor.shape[0], 1)
-            for i in range(len(lhyra.solvers))
-        ]
+        self.regr = [linear_model.LinearRegression() for s in self.lhyra.solvers] # Could change models
+        self.regr.fit([0 for n in range(len(lhyra.extractor.shape[0]))], [0]) # Initialize with 0s
 
-        self.opts = [
-            torch.optim.Adam(value.parameters(), lr=1e-2)
-            for value in self.values
-        ]
+        self.eps_bounds = eps_bounds
 
-        self.loss_fn = torch.nn.MSELoss(reduction='sum')
         self.epochs = []
         self.training = False
-        self.gen_params()
 
 
-    def train(self, iters: int=1000, plot=False):
+    def train(self, iters: int=100, iterdata: int=40, plot=False):
         """
         Train the classifier on the data, given a hook into
         the Lhyra object's eval method.
@@ -44,53 +39,40 @@ class ValueOptimizer(Optimizer):
         
         self.training = True
 
-        data = self.lhyra.data_store.get_data(iters)
+        features = [[] for s in self.lhyra.solvers]
+        times = [[] for s in self.lhyra.solvers]
 
-        totals = []
-        self.p = 1
-        for episode, datum in enumerate(tqdm(data)):
-            self.p = 0.99 * self.p
+        totaltimes = []
 
-            self.lhyra.clear()
-            self.epochs.clear()
-            
-            self.lhyra.eval(datum)
-            
-            totals.append(self.lhyra.times[0])
+        for episode in enumerate(tqdm(iter)):
 
-            for x, y in zip(self.epochs, self.lhyra.times):
-                action, features = x
+        	totaltimes.append(0)
 
-                out = torch.FloatTensor([y])
-                inp = torch.FloatTensor(features)
+        	# epsilon for eps-greedy policy
+        	self.eps = self.eps_bounds[0] + (episode/(iter-1))*(self.eps_bounds[1]-self.eps_bounds[0])
 
-                out_pred = self.values[action](inp)
-                loss = self.loss_fn(out_pred, out)
+        	data = self.lhyra.data_store.get_data(iterdata)
+        	for datum in data:
 
-                self.values[action].zero_grad()
-                loss.backward()
-                self.opts[action].step()
+	            self.lhyra.eval(datum)
 
-            self.gen_params()
+	            totaltimes[-1] += self.lhyra.times[0]
+	            for (a, f), t in zip(self.epochs, self.lhyra.times):
+	            	feature_set[a].append(f)
+	            	times[a].append(t)
 
-        vals = [
-            sum(totals[i:i + iters//100])/(iters//100)
-            for i in range(0,iters,iters//100)
-        ]
+		        self.epochs.clear()
+	            self.lhyra.clear()
+
+	        for a, r in enumerate(self.regr):
+            	r.train(features[a], times[a])
+
+           	totaltimes[-1] /= iterdata
 
         self.training = False
 
-        plt.plot(vals)
+        plt.plot(list(range(1,iter+1)), totaltimes)
         plt.show()
-
-    def gen_params(self):
-        self.params = [
-            tuple(
-                param.data.item()
-                for name, param in value.named_parameters()
-                if param.requires_grad
-            ) for value in self.values
-        ]
 
     def solver(self, features: List) -> Solver:
         """
@@ -107,20 +89,15 @@ class ValueOptimizer(Optimizer):
         # for state in potential_actions:
         #     values.append(self.params['0.bias'][0] + sum(a*b for a,b in zip(state, self.params['0.weight'][0])))
 
-        if self.training:
-            values = torch.FloatTensor(values)
+        if self.training and random() < self.eps:
+    		action = randint(0,len(self.lhyra.solvers)-1)
 
-            values -= values.min() - 1
+    	else:
+	    	values = [r.predict(features) for r in self.regr]
+	    	action = np.argmin(values)
 
-            probs = (1/values) / torch.sum(1/values)
-
-            m = torch.distributions.Categorical(probs)
-            action = m.sample().item()
-
+    	if self.training:
             self.epochs.append((action, features))
-        else:
-            action = values.index(min(values))
-            
 
         if self.lhyra.vocal:
             print(self.lhyra.solvers[action])
