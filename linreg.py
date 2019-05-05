@@ -57,11 +57,24 @@ class LinOptimizer(Optimizer):
 
                 self.lhyra.eval(datum)
 
+                """
+                if episode >= 20:
+                    self.training = False # Force same behavior this time
+                """
                 totaltimes[-1] += self.lhyra.times[0]
                 for (a, f), t in zip(self.epochs, self.lhyra.times):
                     features[a].append(f)
                     times[a].append(t)
+                """
+                if episode >= 20:
+                    ttt = self.lhyra.times[:]
+                    self.lhyra.clear()
 
+                    self.lhyra.eval(datum)
+
+                    for t in range(len(self.lhyra.times)):
+                        print(ttt[t], self.lhyra.times[t], ttt[t]-self.lhyra.times[t])
+                """
                 self.epochs.clear()
                 self.lhyra.clear()
 

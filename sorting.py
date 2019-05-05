@@ -1,10 +1,10 @@
 from typing import Any, Callable, Dict, List
 from lhyra import Solver, FeatureExtractor
 from math import log2
-from random import random, shuffle
+from random import random, shuffle, randint
 
 
-def random_list(max_length: int=1000):
+def random_list(length: int=1000):
     """
     Create a random list of values between 0 and 1 of lengths
     between and max_length.
@@ -13,8 +13,8 @@ def random_list(max_length: int=1000):
     """
 
     # 50% of the time adds a really big number to slow down radix.
-    l = list(range(int(random()*max_length)))
-    if random() < 0.5: l.append(2**50)
+    l = list(range(length))
+    if random() < 0.5: l.append(2**randint(10,1000))
     shuffle(l)
     return l
 
@@ -26,7 +26,7 @@ class SortFeatureExtractor(FeatureExtractor):
         Get the output shape of the feature extractor.
         :return: A list of integers representing the output's dimensions.
         """
-        return [2]  # Length, (mean, variance)?
+        return [3] # Length, (mean, variance)?
 
     def __call__(self, data: Any) -> List:
         """
@@ -34,7 +34,7 @@ class SortFeatureExtractor(FeatureExtractor):
         :param data: A piece of data to extract the parameters of.
         :return: Floats between 0 and 1 of shape self.shape.
         """
-        return [log2(len(data)+2), log2(max(data)+1) if len(data) > 0 else 0]
+        return [len(data), log2(len(data)+1), log2(max(data)+2) if len(data)>=1 else 0]
 
 
 def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
@@ -44,8 +44,12 @@ def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     :param _: Unused parameters.
     :return: A sorted list.
     """
-    if len(data) == 1:
-        return data
+
+    # Call the feature extractor to normalize times
+    if len(_) > 0:
+        _['fx'](data)
+
+    if len(data) <= 1: return data
 
     sorted_first = hook(data[:len(data)//2])
     sorted_second = hook(data[len(data)//2:])
@@ -73,6 +77,11 @@ def insertion_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     :param _: Unused parameters.
     :return: A sorted list.
     """
+
+    # Call the feature extractor to normalize times
+    if len(_) > 0:
+        _['fx'](data)
+
     if len(data) == 1:
         return data[:]
 
@@ -91,6 +100,11 @@ def insertion_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
 
 # Taken from https://www.geeksforgeeks.org/quick-sort/
 def quick_sort(data: List, hook: Callable, _: Dict[str, Any]):
+
+    # Call the feature extractor to normalize times
+    if len(_) > 0:
+        _['fx'](data)
+
     # Partitions in-place and returns the appropriate position.
     def partition(data):
         pivot = data[len(data)//2]
@@ -134,8 +148,11 @@ def radix_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     :return: A sorted list.
     """
 
-    if data == []:
-        return []
+    # Call the feature extractor to normalize times
+    if len(_) > 0:
+        _['fx'](data)
+
+    if len(data) <= 1: return data
 
     max_element = max(data)
     mod = 1
