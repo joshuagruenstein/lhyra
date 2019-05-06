@@ -1,11 +1,14 @@
 from sorting import SortFeatureExtractor, merge_sort, insertion_sort, quick_sort, radix_sort, random_list
+from lhyrasort import lhyra_sort
 from linreg import LinOptimizer
 from lhyra import Lhyra, Solver, DataGenerator
 from time import time
 from tqdm import tqdm
 from random import randint
 
-data = DataGenerator(lambda: random_list(randint(80,80)))
+import numpy as np
+
+data = DataGenerator(lambda: random_list(randint(40,1000), nearlysorted=0.5))
 
 solvers = [
     Solver(merge_sort, []),
@@ -17,13 +20,21 @@ solvers = [
 sf = SortFeatureExtractor()
 lhyra = Lhyra(solvers, data, sf, LinOptimizer)
 
-lhyra.train(iters=100, sample=20)
+quicklhyra = Lhyra(solvers, data, sf, LinOptimizer)
+#quicklhyra.optimizer.coeffs = np.array([[0,0,0],[0,0,0],[0,0,0]])
+#quicklhyra.optimizer.intercepts = np.array([1,1,0])
+quicklhyra.optimizer.coeffs = np.array([[0 for n in range(sf.shape[0])] for s in solvers])
+quicklhyra.optimizer.intercepts = np.array([1 for s in solvers][:-1]+[0])
+
+lhyra.train(iters=0, sample=20)
+
+print(quicklhyra.optimizer.coeffs, quicklhyra.optimizer.intercepts)
 
 print('Lhyra parameters: [m,i,q,r]')
 for s in range(len(solvers)):
     print(lhyra.optimizer.regr[s].coef_, lhyra.optimizer.regr[s].intercept_)
 
-def bench(size=2000, fx_normalize=True):
+def bench(size=200, fx_normalize=True):
 
     if fx_normalize:
         fxdict = { 'fx': sf }
@@ -39,9 +50,9 @@ def bench(size=2000, fx_normalize=True):
 
     print("Py time:", time()-start)
     start = time()
-    lh = lhyra.eval(ex[0], vocal=True)
+    lh = lhyra.vocal_eval(ex[0])
     for i in tqdm(range(1,size)):
-        lh = lhyra.eval(ex[i], vocal=False)
+        lh = lhyra.eval(ex[i])
     print("Lhyra dumbtime", lhyra.optimizer.totaltime)
     print("Lhyra time:", time()-start)
     start = time()
@@ -72,6 +83,19 @@ def bench(size=2000, fx_normalize=True):
         radix = radix_sort(ex[i], radix_hook, fxdict)
 
     print("Radix time:", time()-start)
+    start = time()
+
+    # quicklhyra.vocal_eval(ex[0])
+    for i in tqdm(range(size)):
+        quicklhyra.eval(ex[i])
+
+    print("Lhyra-handicapped time:", time()-start)
+    start = time()
+
+    for i in tqdm(range(size)):
+        sdfdasdf = lhyra_sort(ex[i])
+        
+    print("LhyraSort time:", time()-start)
     
     assert(ex == ex2) # Confirming no side effects
 

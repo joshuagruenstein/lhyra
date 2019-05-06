@@ -26,7 +26,7 @@ class LinOptimizer(Optimizer):
             # Initialize with 0s
             r.fit([[0 for n in range(lhyra.extractor.shape[0])]], [0])
         self.coeffs = np.array([r.coef_ for r in self.regr])
-        self.intersection = np.array([r.intercept_ for r in self.regr])
+        self.intercepts = np.array([r.intercept_ for r in self.regr])
 
         self.eps_bounds = eps_bounds
         self.epochs = []
@@ -60,7 +60,7 @@ class LinOptimizer(Optimizer):
             data = self.lhyra.data_store.get_data(sample)
             for datum in data:
 
-                self.lhyra.eval(datum)
+                self.lhyra.train_eval(datum)
 
                 """
                 if episode >= 20:
@@ -86,13 +86,14 @@ class LinOptimizer(Optimizer):
             for a, r in enumerate(self.regr):
                 if len(features[a]) > 0:
                     r.fit(features[a], times[a])
+                    
+            self.coeffs = np.array([r.coef_ for r in self.regr])
+            self.intercepts = np.array([r.intercept_ for r in self.regr])
 
             totaltimes[-1] /= sample
 
         self.training = False
         
-        self.coeffs = np.array([r.coef_ for r in self.regr])
-        self.intersection = np.array([r.intercept_ for r in self.regr])
 
         plt.plot(list(range(1, iters+1)), totaltimes)
         plt.show()
@@ -104,18 +105,14 @@ class LinOptimizer(Optimizer):
         :return: The Solver best suited given the features provided.
         """
         
-        if not self.training:
-            self.totaltime -= time()
-
-        size = len(self.lhyra.solvers)
+        #if not self.training:
+        #    self.totaltime -= time()
 
         if self.training and random() < self.eps:
-            action = randint(0, size-1)
-
+            action = randint(0, len(self.lhyra.solvers)-1)
         else:
-                
             # values = [r.predict([features]) for r in self.regr]
-            values = self.coeffs @ features + self.intersection
+            values = self.coeffs @ features + self.intercepts
             action = np.argmin(values)
 
         if self.training:
@@ -124,7 +121,7 @@ class LinOptimizer(Optimizer):
         if self.lhyra.vocal:
             print(self.lhyra.solvers[action], features[0])
             
-        if not self.training:
-            self.totaltime += time()
+        #if not self.training:
+        #    self.totaltime += time()
 
         return self.lhyra.solvers[action].parametrized({})
