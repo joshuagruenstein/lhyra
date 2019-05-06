@@ -25,10 +25,14 @@ class LinOptimizer(Optimizer):
         for r in self.regr:
             # Initialize with 0s
             r.fit([[0 for n in range(lhyra.extractor.shape[0])]], [0])
-        self.eps_bounds = eps_bounds
+        self.coeffs = np.array([r.coef_ for r in self.regr])
+        self.intersection = np.array([r.intercept_ for r in self.regr])
 
+        self.eps_bounds = eps_bounds
         self.epochs = []
         self.training = False
+        
+        self.totaltime = 0
 
     def train(self, iters: int=100, sample: int=40, plot=False):
         """
@@ -86,6 +90,9 @@ class LinOptimizer(Optimizer):
             totaltimes[-1] /= sample
 
         self.training = False
+        
+        self.coeffs = np.array([r.coef_ for r in self.regr])
+        self.intersection = np.array([r.intercept_ for r in self.regr])
 
         plt.plot(list(range(1, iters+1)), totaltimes)
         plt.show()
@@ -96,6 +103,9 @@ class LinOptimizer(Optimizer):
         :param features: Features provided to inform solver choice.
         :return: The Solver best suited given the features provided.
         """
+        
+        if not self.training:
+            self.totaltime -= time()
 
         size = len(self.lhyra.solvers)
 
@@ -103,13 +113,18 @@ class LinOptimizer(Optimizer):
             action = randint(0, size-1)
 
         else:
-            values = [r.predict([features]) for r in self.regr]
+                
+            # values = [r.predict([features]) for r in self.regr]
+            values = self.coeffs @ features + self.intersection
             action = np.argmin(values)
 
         if self.training:
             self.epochs.append((action, features))
 
         if self.lhyra.vocal:
-            print(self.lhyra.solvers[action])
+            print(self.lhyra.solvers[action], features[0])
+            
+        if not self.training:
+            self.totaltime += time()
 
         return self.lhyra.solvers[action].parametrized({})

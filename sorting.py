@@ -4,7 +4,7 @@ from math import log2
 from random import random, shuffle, randint
 
 
-def random_list(length: int=1000):
+def random_list(length: int=1000, killradix=0):
     """
     Create a random list of values between 0 and 1 of lengths
     between and max_length.
@@ -14,7 +14,7 @@ def random_list(length: int=1000):
 
     # 50% of the time adds a really big number to slow down radix.
     l = list(range(length))
-    if random() < 0.5: l.append(2**randint(10,1000))
+    if random() < killradix: l.append(2**randint(10,1000))
     shuffle(l)
     return l
 
@@ -34,7 +34,7 @@ class SortFeatureExtractor(FeatureExtractor):
         :param data: A piece of data to extract the parameters of.
         :return: Floats between 0 and 1 of shape self.shape.
         """
-        return [len(data), log2(len(data)+1), log2(max(data)+2) if len(data)>=1 else 0]
+        return [len(data), len(data)*log2(len(data)+1), len(data)**2]#, log2(max(data)+2) if len(data)>=1 else 0]
 
 
 def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:

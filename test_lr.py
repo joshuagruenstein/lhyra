@@ -5,25 +5,25 @@ from time import time
 from tqdm import tqdm
 from random import randint
 
-data = DataGenerator(lambda: random_list(randint(50,1000)))
+data = DataGenerator(lambda: random_list(randint(80,80)))
 
 solvers = [
     Solver(merge_sort, []),
     Solver(insertion_sort, []),
-    Solver(quick_sort, []),
-    Solver(radix_sort, [])
+    Solver(quick_sort, []) #,
+    # Solver(radix_sort, [])
 ]
 
 sf = SortFeatureExtractor()
 lhyra = Lhyra(solvers, data, sf, LinOptimizer)
 
-lhyra.train(iters=400, sample=40)
+lhyra.train(iters=100, sample=20)
 
 print('Lhyra parameters: [m,i,q,r]')
 for s in range(len(solvers)):
     print(lhyra.optimizer.regr[s].coef_, lhyra.optimizer.regr[s].intercept_)
 
-def bench(size=200, fx_normalize=True):
+def bench(size=2000, fx_normalize=True):
 
     if fx_normalize:
         fxdict = { 'fx': sf }
@@ -42,7 +42,7 @@ def bench(size=200, fx_normalize=True):
     lh = lhyra.eval(ex[0], vocal=True)
     for i in tqdm(range(1,size)):
         lh = lhyra.eval(ex[i], vocal=False)
-
+    print("Lhyra dumbtime", lhyra.optimizer.totaltime)
     print("Lhyra time:", time()-start)
     start = time()
 
