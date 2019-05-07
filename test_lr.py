@@ -7,8 +7,9 @@ from tqdm import tqdm
 from random import randint
 
 import numpy as np
+from matplotlib import pyplot as plt
 
-data = DataGenerator(lambda: random_list(randint(40,1000), nearlysorted=0.5))
+data = DataGenerator(lambda: random_list(randint(1000,1000)))
 
 solvers = [
     Solver(merge_sort, []),
@@ -26,23 +27,39 @@ quicklhyra = Lhyra(solvers, data, sf, LinOptimizer)
 quicklhyra.optimizer.coeffs = np.array([[0 for n in range(sf.shape[0])] for s in solvers])
 quicklhyra.optimizer.intercepts = np.array([1 for s in solvers][:-1]+[0])
 
-lhyra.train(iters=0, sample=20)
+#lhyra.train(iters=100, sample=10)
+#lhyra.optimizer.coeffs = np.array([[  7.02924770e-06, -6.41693631e-07, 1.11454411e-08], 
+#             [  2.77095379e-05, -4.98456258e-06, 1.04908416e-07],
+#             [  1.52831053e-05, -1.95691895e-06, 2.02251640e-08]]) 
+#lhyra.optimizer.intercepts = np.array([1.07302477871e-05, -5.74258092972e-05, -5.38219028179e-06])
 
-print(quicklhyra.optimizer.coeffs, quicklhyra.optimizer.intercepts)
+lhyra.optimizer.coeffs = np.array([[  7.95957933e-08  , 3.13214568e-07 ,  7.84754425e-09],
+ [  1.17647476e-05,  -2.22052775e-06   ,8.49854700e-08],
+ [  1.25715975e-05  ,-1.62537198e-06  , 2.26052259e-08]])
+lhyra.optimizer.intercepts = np.array([  4.55142710e-05 , -2.21855518e-05 , -1.30556964e-05])
 
 print('Lhyra parameters: [m,i,q,r]')
 for s in range(len(solvers)):
     print(lhyra.optimizer.regr[s].coef_, lhyra.optimizer.regr[s].intercept_)
+    
+print(lhyra.optimizer.coeffs)
+print(lhyra.optimizer.intercepts)
 
-def bench(size=200, fx_normalize=True):
+lengths = list(range(2,11))
+
+
+def bench(length=100, size=200, fx_normalize=False):
 
     if fx_normalize:
         fxdict = { 'fx': sf }
     else:
         fxdict = {}
 
-    ex = data.get_data(size)
+    dg = DataGenerator(lambda: random_list(randint(length,length)))
+    ex = dg.get_data(size)
     ex2 = [x[:] for x in ex]
+    
+    times = []
 
     start = time()
 
@@ -50,17 +67,21 @@ def bench(size=200, fx_normalize=True):
 
     print("Py time:", time()-start)
     start = time()
-    lh = lhyra.vocal_eval(ex[0])
+    #lh = lhyra.vocal_eval(ex[0])
+    lh = lhyra.eval(ex[0])
     for i in tqdm(range(1,size)):
         lh = lhyra.eval(ex[i])
-    print("Lhyra dumbtime", lhyra.optimizer.totaltime)
+    # print("Lhyra dumbtime", lhyra.optimizer.totaltime)
+    times.append(time()-start)
     print("Lhyra time:", time()-start)
+    
     start = time()
 
     merge_hook = lambda t: merge_sort(t, merge_hook, fxdict)
     for i in tqdm(range(size)):
         merge = merge_sort(ex[i], merge_hook, fxdict)
 
+    times.append(time()-start)
     print("Merge time:", time()-start)
     start = time()
 
@@ -68,6 +89,7 @@ def bench(size=200, fx_normalize=True):
     for i in tqdm(range(size)):
         merge = insertion_sort(ex[i], insert_hook, fxdict)
 
+    times.append(time()-start)
     print("Insertion time:", time()-start)
     start = time()
 
@@ -75,13 +97,16 @@ def bench(size=200, fx_normalize=True):
     for i in tqdm(range(size)):
         quick = quick_sort(ex[i], quick_hook, fxdict)
 
+    times.append(time()-start)
     print("Quick time:", time()-start)
+    """
     start = time()
 
     radix_hook = lambda t: radix_sort(t, radix_hook, fxdict)
     for i in tqdm(range(size)):
         radix = radix_sort(ex[i], radix_hook, fxdict)
 
+    times.append(time()-start)
     print("Radix time:", time()-start)
     start = time()
 
@@ -89,15 +114,27 @@ def bench(size=200, fx_normalize=True):
     for i in tqdm(range(size)):
         quicklhyra.eval(ex[i])
 
+    times.append(time()-start)
     print("Lhyra-handicapped time:", time()-start)
+    """
     start = time()
 
     for i in tqdm(range(size)):
         sdfdasdf = lhyra_sort(ex[i])
         
+    times.append(time()-start)
     print("LhyraSort time:", time()-start)
     
     assert(ex == ex2) # Confirming no side effects
+    
+    return tuple(times)
 
-
-bench()
+alltimes = []
+labels = ['Lhyra', 'Merge', 'Insertion', 'Quick', 'LhyraQ']
+for l in lengths:
+    alltimes.append(bench(length=2**l))
+t = np.array(alltimes).T
+for i in range(t.shape[0]):
+    plt.plot(lengths, t[i], label=labels[i])
+plt.legend()
+plt.show()

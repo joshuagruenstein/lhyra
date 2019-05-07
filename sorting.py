@@ -41,7 +41,7 @@ class SortFeatureExtractor(FeatureExtractor):
         Get the output shape of the feature extractor.
         :return: A list of integers representing the output's dimensions.
         """
-        return [4] # Length, (mean, variance)?
+        return [3] # Length, (mean, variance)?
 
     def __call__(self, data: Any) -> List:
         """
@@ -50,8 +50,8 @@ class SortFeatureExtractor(FeatureExtractor):
         :return: Floats between 0 and 1 of shape self.shape.
         """
         if len(data) == 0:
-            return [0,0,0,1]
-        return [len(data), len(data)*log2(len(data)+1), len(data)**2, data[0] == 1]#, log2(max(data)+2) if len(data)>=1 else 0]
+            return [0,0,0] #[0,0,0,1]
+        return [len(data), len(data)*log2(len(data)+1), len(data)**2] #, data[0] == 1]#, log2(max(data)+2) if len(data)>=1 else 0]
 
 
 def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
