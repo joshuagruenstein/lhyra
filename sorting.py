@@ -4,18 +4,33 @@ from math import log2
 from random import random, shuffle, randint
 
 
-def random_list(length: int=1000, killradix=0):
+def random_list(length: int=1000, killradix=0, nearlysorted=0):
     """
     Create a random list of values between 0 and 1 of lengths
     between and max_length.
     :param max_length: The maximum size of list to be generated.
     :return: The generated list.
     """
+    
+    
+    def shuffle_slice(a, start, stop):
+        i = start
+        while (i < stop-1):
+            idx = randint(i, stop)
+            a[i], a[idx] = a[idx], a[i]
+            i += 1
 
-    # 50% of the time adds a really big number to slow down radix.
-    l = list(range(length))
+    # Sometimes adds a really big number to slow down radix.
+    l = list(range(2,length+2))
     if random() < killradix: l.append(2**randint(10,1000))
-    shuffle(l)
+    if random() < nearlysorted:
+        # Create 8 sections of length 5 which are shuffled:
+        for i in range(8):
+            start = randint(0, length-6)
+            shuffle_slice(l, start, start+5)
+        l[0] = 1
+    else:
+        shuffle(l)
     return l
 
 
@@ -26,7 +41,7 @@ class SortFeatureExtractor(FeatureExtractor):
         Get the output shape of the feature extractor.
         :return: A list of integers representing the output's dimensions.
         """
-        return [3] # Length, (mean, variance)?
+        return [4] # Length, (mean, variance)?
 
     def __call__(self, data: Any) -> List:
         """
@@ -34,7 +49,9 @@ class SortFeatureExtractor(FeatureExtractor):
         :param data: A piece of data to extract the parameters of.
         :return: Floats between 0 and 1 of shape self.shape.
         """
-        return [len(data), len(data)*log2(len(data)+1), len(data)**2]#, log2(max(data)+2) if len(data)>=1 else 0]
+        if len(data) == 0:
+            return [0,0,0,1]
+        return [len(data), len(data)*log2(len(data)+1), len(data)**2, data[0] == 1]#, log2(max(data)+2) if len(data)>=1 else 0]
 
 
 def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:

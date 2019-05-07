@@ -160,6 +160,18 @@ class Lhyra:
         """
 
         self.times.clear()
+        
+    def train_eval(self, data: Any):
+        time_slot = len(self.times)
+
+        self.times.append(None)
+
+        start_time = time()
+
+        sol = self.optimizer.solver(self.extractor(data))(data, self.train_eval)
+
+        self.times[time_slot] = time() - start_time
+        return sol
 
     def eval(self, data: Any, vocal: bool=False) -> Any:
         """
@@ -190,3 +202,9 @@ class Lhyra:
             self.vocal = False
 
         return sol, overhead + optimizer_end - optimizer_start
+
+    def vocal_eval(self, data: Any, vocal: bool=False) -> Any:
+        self.vocal = True
+        sol = self.optimizer.solver(self.extractor(data))(data, self.eval)
+        self.vocal = False
+        return sol
