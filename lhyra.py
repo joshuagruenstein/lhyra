@@ -177,13 +177,16 @@ class Lhyra:
 
         self.times.append(None)
 
+        optimizer_start = time()
+        solver = self.optimizer.solver(self.extractor(data))
+        optimizer_end = time()
         start_time = time()
 
-        sol = self.optimizer.solver(self.extractor(data))(data, self.eval)
+        sol, overhead = solver(data, self.eval)
 
-        self.times[time_slot] = time() - start_time
+        self.times[time_slot] = time() - start_time - overhead
 
         if vocal:
             self.vocal = False
 
-        return sol
+        return sol, overhead + optimizer_end - optimizer_start
