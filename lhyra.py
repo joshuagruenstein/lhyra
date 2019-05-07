@@ -166,12 +166,16 @@ class Lhyra:
 
         self.times.append(None)
 
+        features = self.extractor(data)
+        optimizer_start = time()
+        solver = self.optimizer.solver(features)
+        optimizer_end = time()
         start_time = time()
 
-        sol = self.optimizer.solver(self.extractor(data))(data, self.train_eval)
+        sol, overhead = solver(data, self.train_eval)
 
-        self.times[time_slot] = time() - start_time
-        return sol
+        self.times[time_slot] = time() - start_time - overhead
+        return sol, overhead + optimizer_end - optimizer_start
 
     def eval(self, data: Any, vocal: bool=False) -> Any:
         """
@@ -182,24 +186,19 @@ class Lhyra:
         :return: A solution.
         """
 
-        if vocal:
-            self.vocal = True
-
         time_slot = len(self.times)
 
         self.times.append(None)
 
+        features = self.extractor(data)
         optimizer_start = time()
-        solver = self.optimizer.solver(self.extractor(data))
+        solver = self.optimizer.solver(features)
         optimizer_end = time()
         start_time = time()
 
         sol, overhead = solver(data, self.eval)
 
         self.times[time_slot] = time() - start_time - overhead
-
-        if vocal:
-            self.vocal = False
 
         return sol, overhead + optimizer_end - optimizer_start
 
