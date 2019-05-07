@@ -182,8 +182,27 @@ class Lhyra:
         :return: A solution.
         """
 
-        return self.optimizer.solver(self.extractor(data))(data, self.eval)
-        
+        if vocal:
+            self.vocal = True
+
+        time_slot = len(self.times)
+
+        self.times.append(None)
+
+        optimizer_start = time()
+        solver = self.optimizer.solver(self.extractor(data))
+        optimizer_end = time()
+        start_time = time()
+
+        sol, overhead = solver(data, self.eval)
+
+        self.times[time_slot] = time() - start_time - overhead
+
+        if vocal:
+            self.vocal = False
+
+        return sol, overhead + optimizer_end - optimizer_start
+
     def vocal_eval(self, data: Any, vocal: bool=False) -> Any:
         self.vocal = True
         sol = self.optimizer.solver(self.extractor(data))(data, self.eval)

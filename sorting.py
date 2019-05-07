@@ -66,10 +66,10 @@ def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     if len(_) > 0:
         _['fx'](data)
 
-    if len(data) <= 1: return data
+    if len(data) <= 1: return data, 0
 
-    sorted_first = hook(data[:len(data)//2])
-    sorted_second = hook(data[len(data)//2:])
+    sorted_first, overhead1 = hook(data[:len(data)//2])
+    sorted_second, overhead2 = hook(data[len(data)//2:])
 
     joined = []
 
@@ -84,7 +84,7 @@ def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
             joined.append(sorted_first[i])
             i += 1
 
-    return joined
+    return joined, overhead1 + overhead2
 
 
 def insertion_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
@@ -100,7 +100,7 @@ def insertion_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
         _['fx'](data)
 
     if len(data) == 1:
-        return data[:]
+        return data[:], 0
 
     sorted_data = data[:]
 
@@ -112,7 +112,7 @@ def insertion_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
             sorted_data[j+1] = temp
             j -= 1
 
-    return sorted_data
+    return sorted_data, 0
 
 
 # Taken from https://www.geeksforgeeks.org/quick-sort/
@@ -139,9 +139,12 @@ def quick_sort(data: List, hook: Callable, _: Dict[str, Any]):
 
     p_data = data[:]
     if len(p_data) <= 1:
-        return p_data
+        return p_data, 0
     pi = partition(p_data)
-    return hook(p_data[:pi])+[p_data[pi]]+hook(p_data[pi+1:])
+
+    data1, overhead1 = hook(p_data[:pi])
+    data2, overhead2 = hook(p_data[pi+1:])
+    return data1+[p_data[pi]]+data2, overhead1 + overhead2
 
 
 def counting_sort(data, mod):
@@ -169,7 +172,7 @@ def radix_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
     if len(_) > 0:
         _['fx'](data)
 
-    if len(data) <= 1: return data
+    if len(data) <= 1: return data, 0
 
     max_element = max(data)
     mod = 1
@@ -177,17 +180,17 @@ def radix_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
         data = counting_sort(data, mod)
         mod *= 10
 
-    return data
+    return data, 0
 
 
 # Poor man's unit testing
 if __name__ == '__main__':
     from time import time
 
-    merge_hook = lambda t: merge_sort(t, merge_hook, None)
-    insertion_hook = lambda t: insertion_sort(t, None, None)
-    quick_hook = lambda t: quick_sort(t, quick_hook, None)
-    radix_hook = lambda t: radix_sort(t, radix_sort, None)
+    merge_hook, _ = lambda t: merge_sort(t, merge_hook, None)
+    insertion_hook, _ = lambda t: insertion_sort(t, None, None)
+    quick_hook, _ = lambda t: quick_sort(t, quick_hook, None)
+    radix_hook, _ = lambda t: radix_sort(t, radix_sort, None)
     print(radix_sort([8,7,6,5,4,3,2,1], quick_hook, None))
     
     from random import shuffle, randint
