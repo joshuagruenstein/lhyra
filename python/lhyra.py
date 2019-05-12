@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List
-from time import time
+from time import perf_counter
 
 
 class GradientParameter:
@@ -161,21 +161,6 @@ class Lhyra:
 
         self.times.clear()
         
-    def train_eval(self, data: Any):
-        time_slot = len(self.times)
-
-        self.times.append(None)
-
-        features = self.extractor(data)
-        optimizer_start = time()
-        solver = self.optimizer.solver(features)
-        optimizer_end = time()
-        start_time = time()
-
-        sol, overhead = solver(data, self.train_eval)
-
-        self.times[time_slot] = time() - start_time - overhead
-        return sol, overhead + optimizer_end - optimizer_start
 
     def eval(self, data: Any, vocal: bool=False) -> Any:
         """
@@ -190,15 +175,15 @@ class Lhyra:
 
         self.times.append(None)
 
+        optimizer_start = perf_counter()
         features = self.extractor(data)
-        optimizer_start = time()
         solver = self.optimizer.solver(features)
-        optimizer_end = time()
-        start_time = time()
+        optimizer_end = perf_counter()
+        start_time = perf_counter()
 
         sol, overhead = solver(data, self.eval)
 
-        self.times[time_slot] = time() - start_time - overhead
+        self.times[time_slot] = perf_counter() - start_time - overhead
 
         return sol, overhead + optimizer_end - optimizer_start
 

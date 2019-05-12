@@ -43,6 +43,19 @@ class SortFeatureExtractor(FeatureExtractor):
         """
         return [3] # Length, (mean, variance)?
 
+    def _random_sorted(self, l, random_points):
+        """
+        Use random sampling to determine if a list is sorted.
+        :param l: list to check sortedness of
+        :param random_points: number of points to sample sortedness on 
+        :return: 1 if sorted, 0 if not.
+        """
+
+        points = sorted([randint(0,len(l)-1) for _ in range(random_points)])
+        samples = [l[p] for p in points]
+
+        return int(sorted(samples) == samples)
+
     def __call__(self, data: Any) -> List:
         """
         Call extractor on given data.
@@ -50,8 +63,10 @@ class SortFeatureExtractor(FeatureExtractor):
         :return: Floats between 0 and 1 of shape self.shape.
         """
         if len(data) == 0:
-            return [0,0,0] #[0,0,0,1]
-        return [len(data), len(data)*log2(len(data)+1), len(data)**2] #, data[0] == 1]#, log2(max(data)+2) if len(data)>=1 else 0]
+            return [0,1,0]
+
+        is_sorted = self._random_sorted(data,10)
+        return [len(data), is_sorted, is_sorted * len(data)]
 
 
 def merge_sort(data: List, hook: Callable, _: Dict[str, Any]) -> List:
