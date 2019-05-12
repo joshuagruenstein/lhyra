@@ -20,19 +20,36 @@ class LinOptimizer(Optimizer):
 
         super().__init__(lhyra)
 
+        self.coeffs = None
+        self.intercepts = None
+
         self.regr = [linear_model.LinearRegression()
                      for s in self.lhyra.solvers]  # Could change models
         for r in self.regr:
             # Initialize with 0s
             r.fit([[0 for n in range(lhyra.extractor.shape[0])]], [0])
-        self.coeffs = np.array([r.coef_ for r in self.regr])
-        self.intercepts = np.array([r.intercept_ for r in self.regr])
+        
+        self.update_params()
 
         self.eps_bounds = eps_bounds
         self.epochs = []
         self.training = False
+
         
         self.totaltime = 0
+
+    def update_params(self):
+        new_coeffs = np.array([r.coef_ for r in self.regr])
+        new_intercepts = np.array([r.intercept_ for r in self.regr])
+
+        w = 0.05
+
+        if self.coeffs is not None:
+            self.coeffs = (1-w)*self.coeffs + w*new_coeffs
+            self.intercepts = (1-w)*self.intercepts + w*new_intercepts
+        else:
+            self.coeffs = new_coeffs
+            self.intercepts = new_intercepts
 
     def train(self, iters: int=100, sample: int=40, plot=False):
         """
@@ -45,12 +62,12 @@ class LinOptimizer(Optimizer):
 
         self.training = True
 
-        features = [[] for s in self.lhyra.solvers]
-        times = [[] for s in self.lhyra.solvers]
 
         totaltimes = []
 
         for episode in tqdm(range(iters)):
+            features = [[] for s in self.lhyra.solvers]
+            times = [[] for s in self.lhyra.solvers]
 
             totaltimes.append(0)
 
@@ -62,24 +79,11 @@ class LinOptimizer(Optimizer):
 
                 self.lhyra.train_eval(datum)
 
-                """
-                if episode >= 20:
-                    self.training = False # Force same behavior this time
-                """
                 totaltimes[-1] += self.lhyra.times[0]
                 for (a, f), t in zip(self.epochs, self.lhyra.times):
                     features[a].append(f)
                     times[a].append(t)
-                """
-                if episode >= 20:
-                    ttt = self.lhyra.times[:]
-                    self.lhyra.clear()
 
-                    self.lhyra.eval(datum)
-
-                    for t in range(len(self.lhyra.times)):
-                        print(ttt[t], self.lhyra.times[t], ttt[t]-self.lhyra.times[t])
-                """
                 self.epochs.clear()
                 self.lhyra.clear()
 
@@ -87,8 +91,7 @@ class LinOptimizer(Optimizer):
                 if len(features[a]) > 0:
                     r.fit(features[a], times[a])
                     
-            self.coeffs = np.array([r.coef_ for r in self.regr])
-            self.intercepts = np.array([r.intercept_ for r in self.regr])
+            self.update_params()
 
             totaltimes[-1] /= sample
 
@@ -105,13 +108,9 @@ class LinOptimizer(Optimizer):
         :return: The Solver best suited given the features provided.
         """
         
-        #if not self.training:
-        #    self.totaltime -= time()
-
         if self.training and random() < self.eps:
             action = randint(0, len(self.lhyra.solvers)-1)
         else:
-            # values = [r.predict([features]) for r in self.regr]
             values = self.coeffs @ features + self.intercepts
             action = np.argmin(values)
 
@@ -121,7 +120,4 @@ class LinOptimizer(Optimizer):
         if self.lhyra.vocal:
             print(self.lhyra.solvers[action], features[0])
             
-        #if not self.training:
-        #    self.totaltime += time()
-
         return self.lhyra.solvers[action].parametrized({})
