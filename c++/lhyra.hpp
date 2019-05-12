@@ -54,13 +54,13 @@ template<typename T, typename U> class Lhyra;
 
 template<typename T, typename U>
 class Optimizer {
-private:
+protected:
     Lhyra<T, U> * lhyra;
 public:
     Optimizer(Lhyra<T, U> * l) {
         lhyra = l;
     }
-    virtual void train() = 0;
+    // virtual void train() = 0;
     virtual Solver<T, U> & solver(const std::vector<double> & features) = 0;
 };
 
