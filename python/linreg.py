@@ -42,7 +42,7 @@ class LinOptimizer(Optimizer):
         new_coeffs = np.array([r.coef_ for r in self.regr])
         new_intercepts = np.array([r.intercept_ for r in self.regr])
 
-        w = 0.05
+        w = 1
 
         if self.coeffs is not None:
             self.coeffs = (1-w)*self.coeffs + w*new_coeffs
@@ -65,9 +65,10 @@ class LinOptimizer(Optimizer):
 
         totaltimes = []
 
+        features = [[] for s in self.lhyra.solvers]
+        times = [[] for s in self.lhyra.solvers]
+
         for episode in tqdm(range(iters)):
-            features = [[] for s in self.lhyra.solvers]
-            times = [[] for s in self.lhyra.solvers]
 
             totaltimes.append(0)
 
@@ -77,7 +78,7 @@ class LinOptimizer(Optimizer):
             data = self.lhyra.data_store.get_data(sample)
             for datum in data:
 
-                self.lhyra.train_eval(datum)
+                self.lhyra.eval(datum)
 
                 totaltimes[-1] += self.lhyra.times[0]
                 for (a, f), t in zip(self.epochs, self.lhyra.times):
