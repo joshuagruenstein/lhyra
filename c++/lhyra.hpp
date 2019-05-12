@@ -45,7 +45,7 @@ using Solver = std::function<U(T, std::function<U(T)>)>;
 template<typename T>
 class FeatureExtractor {
 public:
-    virtual int shape() = 0;
+    virtual constexpr unsigned int shape() = 0;
     virtual std::vector<double> operator()(const T & t) = 0;
 };
 
