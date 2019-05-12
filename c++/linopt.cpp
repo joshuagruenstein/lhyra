@@ -28,7 +28,7 @@ public:
 
         gsl_matrix *X = gsl_matrix_calloc(xs.size(), SIZE+1);
         gsl_vector *Y = gsl_vector_alloc(ys.size());
-        gsl_vector *beta = gsl_vector_alloc(SIZE);
+        gsl_vector *beta = gsl_vector_alloc(SIZE+1);
 
         for (int i=0; i<xs.size(); i++) {
             for (int j=0; j<SIZE; j++) gsl_matrix_set(X,i,j,xs[i][j]);
@@ -43,6 +43,12 @@ public:
 
         for (int i=0; i<SIZE; i++) coeffs[i] = gsl_vector_get(beta, i);
         bias = gsl_vector_get(beta,SIZE);
+
+        gsl_matrix_free(X);
+        gsl_matrix_free(cov);
+        gsl_vector_free(Y);
+        gsl_vector_free(beta);
+        gsl_multifit_linear_free(wspc);
     }
 
     double predict(std::array<double, SIZE> features) {
@@ -77,7 +83,7 @@ int main() {
     l.train(x, y);
     std::cout << std::endl;
 
-    std::cout << l.predict(x[3]) << std::endl;
+    std::cout << l.predict(x[0]) << std::endl;
 }
 /*
 template<typename T, typename U, unsigned int SIZE>
