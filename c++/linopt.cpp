@@ -1,6 +1,10 @@
 #pragma once
 
-#include "lhyra.hpp"
+//#include "lhyra.hpp"
+
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_multifit.h>
 
 #include <vector>
 #include <array>
@@ -17,50 +21,28 @@ public:
         for (int i=0; i<SIZE; i++) coeffs[i] = 0;
         bias = 0;
     }
-    
-    void train(const std::vector<std::array<double, SIZE>> & xs, const std::vector<double> & ys) {
+
+    void train(const std::vector< std::array<double, SIZE> > & xs, const std::vector<double> & ys) {
         // for each x_i in x, get the mean, and sum the squared 
         // difference of each value of x and the mean
 
-        int N = xs.size();
-        double y_sum = 0;
-        for (int j=0; j<N; j++) y_sum += ys[j];
+        gsl_matrix *X = gsl_matrix_calloc(xs.size(), SIZE+1);
+        gsl_vector *Y = gsl_vector_alloc(ys.size());
+        gsl_vector *beta = gsl_vector_alloc(SIZE);
 
-        std::array<double, SIZE> column_sums;
-        std::array<double, SIZE> covariance;
-        double sum_of_squares = 0;
-        for (int i=0; i<SIZE; i++) {
-            
-            covariance[i] = 0;
-
-            column_sums[i] = 0;
-            
-            for (int j=0; j<N; j++) {
-                double xij = xs[j][i];
-                sum_of_squares += xij*xij;
-                column_sums[i] += xij;
-                covariance[i] += xij * ys[j];
-            }
-
-            sum_of_squares -= column_sums[i]*column_sums[i]/N;
-            covariance[i]     -= column_sums[i]*y_sum/N;
+        for (int i=0; i<xs.size(); i++) {
+            for (int j=0; j<SIZE; j++) gsl_matrix_set(X,i,j,xs[i][j]);
+            gsl_matrix_set(X, i,SIZE,1);
+            gsl_vector_set(Y, i, ys[i]);
         }
 
-        for (int i=0; i<SIZE; i++) coeffs[i] = covariance[i] / sum_of_squares;
+        double chisq;
+        gsl_matrix *cov = gsl_matrix_alloc(SIZE+1, SIZE+1);
+        gsl_multifit_linear_workspace * wspc = gsl_multifit_linear_alloc(xs.size(), SIZE+1);
+        gsl_multifit_linear(X, Y, beta, cov, &chisq, wspc);
 
-
-        bias = y_sum/N;
-        for (int i=0; i<SIZE; i++) bias -= coeffs[i] * column_sums[i]/N;
-
-        // generate coefficients
-        std::cout << std::endl << "Coeffs: ";
-        for (int i=0; i<SIZE; i++) {
-            std::cout << coeffs[i] << ' ';
-        }
-
-        // generate y intercepts
-        
-        std::cout << std::endl << "Bias: " << bias << std::endl;
+        for (int i=0; i<SIZE; i++) coeffs[i] = gsl_vector_get(beta, i);
+        bias = gsl_vector_get(beta,SIZE);
     }
 
     double predict(std::array<double, SIZE> features) {
