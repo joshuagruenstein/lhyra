@@ -27,7 +27,7 @@ quicklhyra = Lhyra(solvers, data, sf, LinOptimizer)
 quicklhyra.optimizer.coeffs = np.array([[0 for n in range(sf.shape[0])] for s in solvers])
 quicklhyra.optimizer.intercepts = np.array([1 for s in solvers][:-1]+[0])
 
-lhyra.train(iters=200, sample=20)
+lhyra.train(iters=50, sample=20)
 #lhyra.optimizer.coeffs = np.array([[  7.02924770e-06, -6.41693631e-07, 1.11454411e-08], 
 #             [  2.77095379e-05, -4.98456258e-06, 1.04908416e-07],
 #             [  1.52831053e-05, -1.95691895e-06, 2.02251640e-08]]) 
