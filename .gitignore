@@ -387,3 +387,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+# C++ ------------------------------------
+*.exe
+*.o
