@@ -4,19 +4,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <iostream>
-
-/* FOR TESTING LHYRA:
-
-Order of initialization:
-
-1. Create datastore
-2. Create feature extractor
-3. Create optimizer<in_type, out_type, extractor.size>
-4. Create LHYRA
-
-
-*/
-
 constexpr int LIST_SIZE = 4;
 
 struct random_list {

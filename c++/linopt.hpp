@@ -57,18 +57,16 @@ public:
 
         return result;
     }
-};
 
-template<typename T>
-class Test {
-protected:
-public:
-    double testd;
-    Test(double d) { testd = d; }
+    void pretty_print(std::ostream & o) {
+        o << "[Coeffs=<";
+        for(int i = 0; i < SIZE; i++) o << coeffs[i] << ',';
+        o << ">; Bias=" << bias << ']';
+    }
 };
 
 template<typename T, typename U, unsigned int SIZE>
-class LinOptimizer: public Optimizer<T, U>, public Test<T> {
+class LinOptimizer: public Optimizer<T, U, SIZE> {
 private:
     double max_eps, min_eps, eps;
     double totaltime;
@@ -77,18 +75,17 @@ private:
     bool training;
     unsigned int num_solvers;
     
-    std::vector<LinearRegression<SIZE>> regr;
-    
 public:
-    LinOptimizer(Lhyra<T, U> * l, double maxeps = 0.9, double mineps = 0.1) :
-                Optimizer<T, U>(l), Test<T>(maxeps) {
-        
-        testd += 1;
+    std::vector<LinearRegression<SIZE>> regr; // Exposing temporarily to get coeffs.
+    
+    LinOptimizer(): Optimizer<T, U, SIZE>() {
         max_eps = 0.9;
         min_eps = 0.1;
-        eps = max_eps;
+    }
+
+    void init() {
         
-        num_solvers = l->solvers.size();        
+        num_solvers = this->lhyra->solvers.size();        
         regr = std::vector< LinearRegression<SIZE> >();
         regr.reserve(num_solvers);
         for(int i = 0; i < num_solvers; i++) {
@@ -97,6 +94,8 @@ public:
         
         training = false;
         totaltime = 0;
+
+        eps = max_eps;
     }
     
     void train(int iters, int sample, bool log) {
@@ -107,25 +106,28 @@ public:
         auto features = std::vector< std::vector< std::array<double, SIZE> > >(num_solvers);
         auto times = std::vector< std::vector<double> >(num_solvers);
         
+        //std::cout << "Checkpoint 1.2" << std::endl;
         for(int episode = 0; episode < iters; episode++) {
             totaltimes.push_back(0);
             
             eps = max_eps + (episode/(iters-1))*(min_eps-max_eps);
             
-            auto data = lhyra->datastore->get_data(sample);
+            auto data = this->lhyra->datastore->get_data(sample);
+            //std::cout << "Checkpoint 1.3" << std::endl;
             for(T & datum : data) {
-                lhyra(datum);
+                (*(this->lhyra))(datum);
+                //std::cout << "Checkpoint 1.4" << std::endl;
                 
-                totaltimes.back() += lhyra.times[0];
+                totaltimes.back() += this->lhyra->times[0];
                 
                 for(int i = 0; i < epoch_choices.size(); i++) {
                     features[epoch_choices[i]].push_back(epoch_features[i]);
-                    times[epoch_choices[i]].push_back(lhyra->times[i]);
+                    times[epoch_choices[i]].push_back(this->lhyra->times[i]);
                 }
                 
                 epoch_choices.clear();
                 epoch_features.clear();
-                lhyra->clear();
+                this->lhyra->clear();
             }
             
             for(int i = 0; i < num_solvers; i++) {
@@ -141,6 +143,8 @@ public:
         
         if(log) {        
             auto f = std::ofstream("times.txt");
+
+            f << std::fixed;
             
             for(auto& time : totaltimes) {
                 f << time << std::endl;
@@ -175,10 +179,10 @@ public:
             epoch_features.push_back(features);
         }
         
-        if(lhyra->vocal) {
+        if(this->lhyra->vocal) {
             std::cout << action << std::endl;
         }
         
-        return lhyra->solvers[action];
+        return this->lhyra->solvers[action];
     }
 };

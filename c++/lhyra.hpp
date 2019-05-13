@@ -40,44 +40,58 @@ public:
 }*/
 
 template<typename T, typename U>
-using Solver = std::function<U(T, std::function<U(T)>)>;
+using Solver = std::function<U(const T &, std::function<U(const T &)> &)>;
 
-template<typename T>
+template<typename T, unsigned int SIZE>
 class FeatureExtractor {
 public:
-    virtual std::vector<double> operator()(const T & t) = 0;
+    virtual std::array<double, SIZE> operator()(const T & t) = 0;
 };
 
 // Early declaration for the compiler
-template<typename T, typename U> class Lhyra;
+template<typename T, typename U, unsigned int SIZE> class Lhyra;
 
-template<typename T, typename U>
+/*
+When subclassing Optimizer, Constructor should be basically blank.
+Instead, use init(), which is called by Lhyra, to do initializaiton.
+*/
+template<typename T, typename U, unsigned int SIZE>
 class Optimizer {
 protected:
-    Lhyra<T, U> * lhyra;
-    double testy;
+    Lhyra<T, U, SIZE> * lhyra;
 public:
-    Optimizer(Lhyra<T, U> * l): lhyra(l) { testy = 0; }
-    virtual Solver<T, U> & solver(const std::vector<double> & features) = 0;
+    Optimizer() { lhyra = NULL; }
+    void set_lhyra(Lhyra<T, U, SIZE> * l) {
+        lhyra = l;
+        init();
+    }
+    virtual void init() = 0;
+    virtual Solver<T, U> & solver(const std::array<double, SIZE> & features) = 0;
 };
 
-template<typename T, typename U>
+// For debugging:
+#include <iostream>
+// End
+
+template<typename T, typename U, unsigned int SIZE>
 class Lhyra {
 private:
-    std::vector<Solver<T, U>> solvers;
-    DataStore<T> * datastore;
-    FeatureExtractor<T> * extractor;
-    Optimizer<T, U> * optimizer;
-    bool vocal;
+    FeatureExtractor<T, SIZE> * extractor;
+    Optimizer<T, U, SIZE> * optimizer;
 public:
+    // The optimizer needs to see these:
+    DataStore<T> * datastore;
+    std::vector<Solver<T, U>> solvers;
+    bool vocal;
     std::vector<double> times;
     
-    Lhyra(const std::vector<Solver<T, U>> & s,
-              const DataStore<T> * ds,
-              const FeatureExtractor<T> * e,
-              const Optimizer<T, U> * o):
+    Lhyra(std::vector<Solver<T, U>> & s,
+              DataStore<T> * ds,
+              FeatureExtractor<T, SIZE> * e,
+              Optimizer<T, U, SIZE> * o):
               solvers(s) {
         optimizer = o;
+        optimizer->set_lhyra(this);
         extractor = e;
         datastore = ds;
         vocal = false;
@@ -91,14 +105,18 @@ public:
         
         auto t1 = std::chrono::high_resolution_clock::now();
         
+        //std::cout << "Checkpoint 5.1" << std::endl;
         auto features = (*extractor)(data);
+        //std::cout << "Checkpoint 5.2" << std::endl;
         auto solver = optimizer->solver(features);
-        auto hook = std::function<U(const T&)>(&operator());
+        //std::cout << "Checkpoint 5.3" << std::endl;
+        std::function<U(const T&)> hook = std::bind(*this, std::placeholders::_1);
         auto sol = solver(data, hook);
         
         auto t2 = std::chrono::high_resolution_clock::now();
         
-        times.push_back(std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1).count());
+        times.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count());
+        //std::cout << times.back() << std::endl;
         
         return sol;
     }
@@ -108,5 +126,7 @@ public:
         vocal = false;
         return answer;
     }
-    
+    static U static_eval(Lhyra & lhyra, const T & data) {
+        return lhyra(data);
+    }
 };
