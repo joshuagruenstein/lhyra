@@ -59,12 +59,20 @@ public:
     }
 };
 
+template<typename T>
+class Test {
+protected:
+public:
+    double testd;
+    Test(double d) { testd = d; }
+};
+
 template<typename T, typename U, unsigned int SIZE>
-class LinOptimizer: public Optimizer<T, U> {
+class LinOptimizer: public Optimizer<T, U>, public Test<T> {
 private:
     double max_eps, min_eps, eps;
     double totaltime;
-    std::vector<double> epoch_choices;
+    std::vector<int> epoch_choices;
     std::vector< std::array<double, SIZE> > epoch_features;
     bool training;
     unsigned int num_solvers;
@@ -73,9 +81,9 @@ private:
     
 public:
     LinOptimizer(Lhyra<T, U> * l, double maxeps = 0.9, double mineps = 0.1) :
-                Optimizer<T, U>(l) {
+                Optimizer<T, U>(l), Test<T>(maxeps) {
         
-
+        testd += 1;
         max_eps = 0.9;
         min_eps = 0.1;
         eps = max_eps;
@@ -106,7 +114,7 @@ public:
             
             auto data = lhyra->datastore->get_data(sample);
             for(T & datum : data) {
-                lhyra->eval(datum);
+                lhyra(datum);
                 
                 totaltimes.back() += lhyra.times[0];
                 

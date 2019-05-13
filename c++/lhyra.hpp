@@ -55,10 +55,9 @@ template<typename T, typename U>
 class Optimizer {
 protected:
     Lhyra<T, U> * lhyra;
+    double testy;
 public:
-    Optimizer(Lhyra<T, U> * l) {
-        lhyra = l;
-    }
+    Optimizer(Lhyra<T, U> * l): lhyra(l) { testy = 0; }
     virtual Solver<T, U> & solver(const std::vector<double> & features) = 0;
 };
 

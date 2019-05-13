@@ -29,6 +29,8 @@ struct random_list {
     }
 };
 
+//*
+
 #include <stdlib.h>
 #include <time.h>
 int main() {
@@ -55,6 +57,7 @@ int main() {
 
     std::cout << l.predict(x[0]) << std::endl;
 }
+//*/
 
 /*
 int main() {
@@ -70,4 +73,4 @@ int main() {
         std::cout << std::endl;
     }
 }
-*/
+//*/
