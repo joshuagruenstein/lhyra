@@ -1,5 +1,5 @@
 #include "lhyra.hpp"
-#include "lhyra.hpp"
+#include "linopt.hpp"
 
 #include <stdlib.h>
 #include <time.h>
@@ -11,7 +11,7 @@ Order of initialization:
 
 1. Create datastore
 2. Create feature extractor
-3. Create optimizer<in_type, out_type, extractor.shape()>
+3. Create optimizer<in_type, out_type, extractor.size>
 4. Create LHYRA
 
 

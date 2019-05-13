@@ -72,17 +72,19 @@ private:
     std::vector<LinearRegression<SIZE>> regr;
     
 public:
-    LinOptimizer(Lhyra<T, U> * l, double maxeps = 0.9, double mineps = 0.1) {
+    LinOptimizer(Lhyra<T, U> * l, double maxeps = 0.9, double mineps = 0.1) :
+                Optimizer<T, U>(l) {
+        
+
         max_eps = 0.9;
         min_eps = 0.1;
         eps = max_eps;
-        lhyra = l;
         
-        num_solvers = l->solveN;        
+        num_solvers = l->solvers.size();        
         regr = std::vector< LinearRegression<SIZE> >();
-        regr.reserve(num_solvers)
+        regr.reserve(num_solvers);
         for(int i = 0; i < num_solvers; i++) {
-            regr.emplace_back(LinearRegression);
+            regr.emplace_back(LinearRegression<SIZE>());
         }
         
         training = false;
@@ -103,12 +105,12 @@ public:
             eps = max_eps + (episode/(iters-1))*(min_eps-max_eps);
             
             auto data = lhyra->datastore->get_data(sample);
-            for(auto & datum : data) {
+            for(T & datum : data) {
                 lhyra->eval(datum);
                 
                 totaltimes.back() += lhyra.times[0];
                 
-                for(int i = 0; i < epoch_choicN; i++) {
+                for(int i = 0; i < epoch_choices.size(); i++) {
                     features[epoch_choices[i]].push_back(epoch_features[i]);
                     times[epoch_choices[i]].push_back(lhyra->times[i]);
                 }
@@ -169,7 +171,6 @@ public:
             std::cout << action << std::endl;
         }
         
-        return lhyra->solvers[action]
+        return lhyra->solvers[action];
     }
-}
-*/
+};

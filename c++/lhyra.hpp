@@ -45,7 +45,6 @@ using Solver = std::function<U(T, std::function<U(T)>)>;
 template<typename T>
 class FeatureExtractor {
 public:
-    virtual constexpr unsigned int shape() = 0;
     virtual std::vector<double> operator()(const T & t) = 0;
 };
 
@@ -60,7 +59,6 @@ public:
     Optimizer(Lhyra<T, U> * l) {
         lhyra = l;
     }
-    // virtual void train() = 0;
     virtual Solver<T, U> & solver(const std::vector<double> & features) = 0;
 };
 
