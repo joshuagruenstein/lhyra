@@ -1,6 +1,6 @@
 #pragma once
 
-//#include "lhyra.hpp"
+#include "lhyra.hpp"
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_math.h>
@@ -59,33 +59,6 @@ public:
     }
 };
 
-#include <stdlib.h>
-#include <time.h>
-int main() {
-    auto l = LinearRegression<2>();
-    srand(0);
-
-    auto x = std::vector < std::array<double, 2> >(4);
-    for(int i = 0; i < 4; i++) {
-        for(int j = 0; j < 2; j++) {
-            x[i][j] = rand()%11;
-            std::cout << x[i][j] << ' ';
-        }
-        std::cout << std::endl;
-    }
-
-    auto y = std::vector<double>(4);
-    for(int i = 0; i < 4; i++) {
-        y[i] = rand()%4;
-        std::cout << y[i] << ' ';
-    }
-
-    l.train(x, y);
-    std::cout << std::endl;
-
-    std::cout << l.predict(x[0]) << std::endl;
-}
-/*
 template<typename T, typename U, unsigned int SIZE>
 class LinOptimizer: public Optimizer<T, U> {
 private:
