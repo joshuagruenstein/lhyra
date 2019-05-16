@@ -15,8 +15,12 @@ with open('data.txt', 'r') as f:
 		brute.append(log2(int(b)))
 
 plt.plot(xs, lhyra, label='lhyra')
-plt.plot(xs, smart, label='smart')
-plt.plot(xs, brute, label='brute')
+plt.plot(xs, smart, label='divide and conquer')
+plt.plot(xs, brute, label='brute force')
+
+plt.xlabel('Log of Number of Points')
+plt.ylabel('Log of Time (in microseconds)')
+
 plt.legend()
 
 plt.savefig('relative_plot_points.png')
