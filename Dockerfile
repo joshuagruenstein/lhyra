@@ -34,6 +34,4 @@ COPY python /lhyra/python
 
 WORKDIR "/lhyra/c++"
 
-RUN g++ -I/usr/include -c sort_test.cpp -std=c++14 -o sort_test.o && g++ -L/usr/lib sort_test.o -lgsl -lgslcblas -lm -o sort_test -std=c++14
-
 CMD ./tests.sh

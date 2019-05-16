@@ -1,3 +1,7 @@
+echo "Compiling and linking..."
+
+g++ -I/usr/include -c sort_test.cpp -std=c++14 -o sort_test.o && g++ -L/usr/lib sort_test.o -lgsl -lgslcblas -lm -o sort_test -std=c++14
+
 echo "Running code..."
 
 ./sort_test

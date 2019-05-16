@@ -4,7 +4,7 @@ services:
   - docker
 
 before_install:
-  - docker build -t lhyra .
+  - docker build -q -t lhyra .
 
 script:
   - docker run lhyra
