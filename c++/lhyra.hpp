@@ -112,7 +112,6 @@ public:
         
         int time_slot = times.size();
         times.push_back(0);
-        std::cout << "size: " << times.size() << std::endl;
 
         //std::cout << "Checkpoint 5.1" << std::endl;
         auto features = (*extractor)(data);
