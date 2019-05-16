@@ -122,6 +122,7 @@ public:
         //std::cout << "Checkpoint 5.3" << std::endl;
 
         auto sol = solver(data, *this);
+        //std::cout << "Checkpoint 5.4" << std::endl;
         
         auto t2 = std::chrono::high_resolution_clock::now();
         

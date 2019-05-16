@@ -120,7 +120,7 @@ public:
                 
                 totaltimes.back() += this->lhyra->times[0];
                 
-                // std::cout << epoch_choices.size() << ' ' << this->lhyra->times.size() << std::endl;
+                //std::cout << epoch_choices.size() << ' ' << this->lhyra->times.size() << std::endl;
 
                 for(int i = 0; i < epoch_choices.size(); i++) {
                     features[epoch_choices[i]].push_back(epoch_features[i]);
