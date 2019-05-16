@@ -97,7 +97,6 @@ Consider the \textsc{Closest Pair} problem, in which given a set of $n$ points $
 
 We implemented a Lhyra instance with the above two solvers, using our linear regressor-based optimizer and extracting set size $n$ as our only feature.  With only seconds of training, Lhyra was able to substantially outperform both algorithms for nearly all $n$ by learning to use the divide-and-conquer method at high $n$, and the brute-force method at lower $n$.
 
-\vspace{0.5cm}
 \begin{figure}[!h]
     \centering
     \begin{floatrow}
@@ -121,40 +120,38 @@ A more complex recursive problem is \textsc{Sorting}, producing an ordered list 
 
 We implemented a Lhyra instance with the three solvers, the same optimizer as above, and two features: the list length $n$, and sortedness $n*s$, calculated in $O(1)$ time by randomly sampling 10 elements from the list and checking their orderedness $s$, then multiplying by $n$ to normalize to our other feature.  Below are results from this instance using purely-random lists, showing that Lhyra dramatically outperforms the fastest algorithm Quicksort at large $n$, and matches Insertion Sort at small $n$.
 
-\vspace{0.5cm}
 \begin{figure}[!ht]
     \centering
     \begin{floatrow}
         \ffigbox{
             \caption{Random \textsc{Sorting} training curve}
         }{
-            \includegraphics[width=5.5cm]{example-image}
+            \includegraphics[width=8cm]{images/training_times_unsorted_lists}
         }
       
         \ffigbox{
             \caption{Random \textsc{Sorting} relative performance}
         }{%
-            \includegraphics[width=5.5cm]{example-image}
+            \includegraphics[width=8cm]{images/relative_plot_unsorted_lists}
         }
     \end{floatrow}
 \end{figure}
 
-However, Lhyra can perform even better with interesting and changing data distributions.  Take the following example, where lists are already 50\% sorted.
+However, Lhyra can perform even better with interesting and changing data distributions.  Take the following example, where lists are 80\% nearly sorted.
 
-\vspace{0.5cm}
 \begin{figure}[!ht]
     \centering
     \begin{floatrow}
         \ffigbox{
             \caption{Partially-sorted \textsc{Sorting} training curve}
         }{
-            \includegraphics[width=5.5cm]{example-image}
+            \includegraphics[width=8cm]{images/training_times_mostly_sorted_lists}
         }
       
         \ffigbox{
             \caption{Partially-sorted \textsc{Sorting} relative performance}
         }{%
-            \includegraphics[width=5.5cm]{example-image}
+            \includegraphics[width=8cm]{images/relative_plot_mostly_sorted_lists}
         }
     \end{floatrow}
 \end{figure}
