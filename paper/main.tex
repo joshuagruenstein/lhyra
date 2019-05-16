@@ -1,7 +1,7 @@
-\documentclass{article}
+\documentclass[11pt]{article}
 \usepackage{hyperref, graphicx, floatrow}
 
-\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage[letterpaper, margin=1.25in]{geometry}
 \setlength{\parskip}{\baselineskip}
 \setlength{\parindent}{0pt}
 
@@ -168,7 +168,7 @@ A natural extension of Lhyra is introducing learned feature extraction. This pro
 
 An application of Lhyra which we have not yet explored is online learning in production environments.  If the data distribution changes over time, Lhyra could continuously use evaluation data to train its solver picker.  This is actually doable for both \textsc{Sorting} and \textsc{Closest Pair}, as training for the whole dataset occurs in seconds, so miniature iterative updates could easily be done in production while remaining net-positive.
 
-We would also like to investigate Lhyra's effectiveness at optimizing criteria other than time. One option would be to explore polynomial time approximation algorithms to NP-hard problems. In this scenario, cost could be a weighted function of evaluation time and accuracy, depending on the priorities of the user. It is also likely that for these more difficult problems, the benefits of Lhyra could be far greater in magnitude than they are in \textsc{Sorting} and \textsc{Closest Pair}, because optimization for time on already-fast problems constrains the types of features and complexity of optimizer that Lhyra can use. For problems relating to protein-folding, for example, Lhyra could use more complex features, models, and solvers, and operate on more diverse data distributions, and possibly yiled big gains for a problem which is useful and hard.
+We would also like to investigate Lhyra's effectiveness at optimizing criteria other than time. One option would be to explore polynomial time approximation algorithms to NP-hard problems. In this scenario, cost could be a weighted function of evaluation time and accuracy, depending on the priorities of the user. It is also likely that for these more difficult problems, the benefits of Lhyra could be far greater in magnitude than they are in \textsc{Sorting} and \textsc{Closest Pair}, because optimization for time on already-fast problems constrains the types of features and complexity of optimizer that Lhyra can use. For problems relating to protein-folding, for example, Lhyra could use more complex features, models, and solvers, and operate on more diverse data distributions, and possibly yield big gains for a problem which is useful and hard.
 
 In conclusion, we have designed and implemented a general framework for learned optimization of recursive functions. We have shown that Lhyra can learn models for simple problems whih provide substantial improvements over individual algorithms, and also demonstrated the generality and extensibiity of our approach, with an eye towards future work. We believe Lhyra constitutes a useful development in the field of learning-augmented algorithms.
 
