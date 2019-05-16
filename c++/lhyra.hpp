@@ -103,20 +103,26 @@ public:
     }
     U operator()(const T & data) {
         
+
         auto t1 = std::chrono::high_resolution_clock::now();
         
+        int time_slot = times.size();
+        times.push_back(0);
+        std::cout << "size: " << times.size() << std::endl;
+
         //std::cout << "Checkpoint 5.1" << std::endl;
         auto features = (*extractor)(data);
+        
         //std::cout << "Checkpoint 5.2" << std::endl;
+        //std::cout << "me: " << this << std::endl;
         auto solver = optimizer->solver(features);
         //std::cout << "Checkpoint 5.3" << std::endl;
-        std::function<U(const T&)> hook = std::bind(*this, std::placeholders::_1);
+        std::function<U(const T&)> hook = *this;
         auto sol = solver(data, hook);
         
         auto t2 = std::chrono::high_resolution_clock::now();
         
-        times.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count());
-        //std::cout << times.back() << std::endl;
+        times[time_slot] = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
         
         return sol;
     }
