@@ -16,13 +16,11 @@ with open('data.txt', 'r') as f:
 		merge.append(log2(int(m)))
 		insertion.append(log2(int(i)))
 		quick.append(log2(int(q)))
-		std.append(log2(int(s)))
 
 plt.plot(xs, lhyra, label='lhyra')
 plt.plot(xs, merge, label='merge')
 plt.plot(xs, insertion, label='insertion')
 plt.plot(xs, quick, label='quick')
-plt.plot(xs, std, label='std')
 
 plt.xlabel('Log of List Length')
 plt.ylabel('Log of Time (in microseconds)')
