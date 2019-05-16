@@ -110,7 +110,7 @@ public:
         for(int episode = 0; episode < iters; episode++) {
             totaltimes.push_back(0);
             
-            eps = max_eps + (episode/(iters-1))*(min_eps-max_eps);
+            eps = max_eps + (double(episode)/(iters-1))*(min_eps-max_eps);
             
             auto data = this->lhyra->datastore->get_data(sample);
             //std::cout << "Checkpoint 1.3" << std::endl;
