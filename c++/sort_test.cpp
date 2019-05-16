@@ -13,7 +13,7 @@
 // Data generator for sorting. Yes, you modify the globals to change the behavior. Sorry.
 int LIST_LENGTH = 100;
 bool is_training = true;
-double NEARLY_SORTED = 0;
+double NEARLY_SORTED = 0.;
 void shuffle_slice(std::vector<double> & a, int start, int stop) {
 	int i = start;
 	while(i < stop-1) {
@@ -27,7 +27,7 @@ void shuffle_slice(std::vector<double> & a, int start, int stop) {
 std::vector<double> random_list() {
 	std::vector<double> list;
 	int length;
-	if(is_training) length = rand() % LIST_LENGTH;
+	if(is_training) length = 6+rand() % (LIST_LENGTH-6);
 	else length = LIST_LENGTH;
 	list.reserve(length);
 	for(int i = 0; i < length; i++) {
