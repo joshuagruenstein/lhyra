@@ -164,12 +164,11 @@ int main() {
 		&smart_opt
 	};
 
-	linopt.train(10,10,true);
+	linopt.train(80,20,true);
 
-
-	std::vector<Point> points; points.reserve(4000);
+;
 	std::ofstream f("data.txt");
-	const int NUM_DATA = 100;
+	const int NUM_DATA = 40;
 	for(LIST_LENGTH = 16; LIST_LENGTH <= 4096; LIST_LENGTH *= 2) {
 
 		std::cout << "Starting list of length " << LIST_LENGTH << std::endl;

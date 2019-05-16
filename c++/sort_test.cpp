@@ -11,7 +11,8 @@
 
 
 // Data generator for sorting. Yes, you modify the globals to change the behavior. Sorry.
-int LIST_LENGTH = 1000;
+int LIST_LENGTH = 100;
+bool is_training = true;
 double NEARLY_SORTED = 0;
 void shuffle_slice(std::vector<double> & a, int start, int stop) {
 	int i = start;
@@ -25,18 +26,21 @@ void shuffle_slice(std::vector<double> & a, int start, int stop) {
 }
 std::vector<double> random_list() {
 	std::vector<double> list;
-	list.reserve(LIST_LENGTH);
-	for(int i = 0; i < LIST_LENGTH; i++) {
+	int length;
+	if(is_training) length = rand() % LIST_LENGTH;
+	else length = LIST_LENGTH;
+	list.reserve(length);
+	for(int i = 0; i < length; i++) {
 		list.emplace_back(i);
 	}
 	if(double(rand()) / RAND_MAX < NEARLY_SORTED) {
 		// Create 8 sections of length 5 which are shuffled:
 		for(int i = 0; i < 8; i++) {
-			int start = rand() % (LIST_LENGTH-5);
+			int start = rand() % (length-5);
 			shuffle_slice(list, start, start+5);
 		}
 	}
-	else shuffle_slice(list, 0, LIST_LENGTH-1);
+	else shuffle_slice(list, 0, length-1);
 	return list;
 }
 
@@ -129,7 +133,8 @@ int main() {
 
 	//std::cout << "Checkpoint 1" << std::endl;
 
-	linopt.train(200, 40, true);
+	linopt.train(200, 50, true);
+	is_training = false;
 
 	//std::cout << "Checkpoint " << std::endl;
 
