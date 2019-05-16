@@ -9,8 +9,8 @@ echo "Running sorting code..."
 
 echo "Generating plots..."
 
-python plot_progress.py
-mv progress.png progress_sorting.png
+python make_graph_training.py
+mv training_times.png progress_sorting.png
 python make_graph.py
 
 echo "Running points code..."
@@ -19,8 +19,8 @@ echo "Running points code..."
 
 echo "Generating plot..."
 
-python plot_progress.py
-mv progress.png progress_points.png
+python make_graph_training.py
+mv training_times.png progress_points.png
 python make_graph_points.py
 
 echo "Uploading to imgur..."
