@@ -108,21 +108,27 @@ public:
         size_t index = times.size();
         times.emplace_back(0);
 
-        // std::cout << this << std::endl;
-
         auto t1 = std::chrono::high_resolution_clock::now();
         
+        int time_slot = times.size();
+        times.push_back(0);
+        std::cout << "size: " << times.size() << std::endl;
+
         //std::cout << "Checkpoint 5.1" << std::endl;
         auto features = (*extractor)(data);
+        
         //std::cout << "Checkpoint 5.2" << std::endl;
+        //std::cout << "me: " << this << std::endl;
         auto solver = optimizer->solver(features);
         //std::cout << "Checkpoint 5.3" << std::endl;
+
         auto sol = solver(data, *this);
         
         auto t2 = std::chrono::high_resolution_clock::now();
         
         times[index] = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
         //std::cout << times.back() << std::endl;
+        
         
         return sol;
     }
