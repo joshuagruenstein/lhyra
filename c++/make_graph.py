@@ -24,4 +24,5 @@ plt.plot(xs, insertion, label='insertion')
 plt.plot(xs, quick, label='quick')
 plt.plot(xs, std, label='std')
 plt.legend()
-plt.show()
+
+plt.savefig('relative_plot.png')

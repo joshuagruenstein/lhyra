@@ -29,13 +29,11 @@ RUN apk add --repository http://dl-cdn.alpinelinux.org/alpine/edge/main \
 
 RUN apk add --no-cache gsl-dev
 
-COPY c++ /lhyra/cpp
+COPY c++ /lhyra/c++
 COPY python /lhyra/python
 
-RUN cd lhyra/cpp
-
-WORKDIR "/lhyra/cpp"
+WORKDIR "/lhyra/c++"
 
 RUN g++ -I/usr/include -c sort_test.cpp -std=c++14 -o sort_test.o && g++ -L/usr/lib sort_test.o -lgsl -lgslcblas -lm -o sort_test -std=c++14
 
-CMD ./sort_test && echo "Works!"
+CMD ./tests.sh

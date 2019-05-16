@@ -6,4 +6,5 @@ with open('times.txt', 'r') as f:
 times = [float(t) / 10**6 for t in s.split('\n') if len(t) > 0]
 
 plt.plot(list(range(len(times))), times)
-plt.show()
+
+plt.savefig('progress.png')
