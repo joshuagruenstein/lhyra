@@ -1,17 +1,21 @@
 #pragma once
 
+#include "lhyra.hpp"
+
 #include <vector>
 #include <iostream>
-#include <functional>
 
-std::vector<double> merge_sort(const std::vector<double> & data2, std::function<std::vector<double>(const std::vector<double> &)> & hook) {
+constexpr int FEATURE_SIZE = 4;
+
+std::vector<double> merge_sort(const std::vector<double> & data2,
+		Lhyra<std::vector<double>, std::vector<double>, FEATURE_SIZE> & lhyra) {
 	std::vector<double> data{data2};
 	if (data.size() <= 1) return data;
 
 	int halfway = data.size()/2;
 
-	auto sorted_first = hook(std::vector<double>(data.begin(), data.begin() + halfway));
-	auto sorted_second = hook(std::vector<double>(data.begin()+halfway, data.begin() + data.size()));
+	auto sorted_first = lhyra(std::vector<double>(data.begin(), data.begin() + halfway));
+	auto sorted_second = lhyra(std::vector<double>(data.begin()+halfway, data.begin() + data.size()));
 
 	auto joined = std::vector<double>();
 
@@ -24,12 +28,8 @@ std::vector<double> merge_sort(const std::vector<double> & data2, std::function<
 
 	return joined;
 }
-std::vector<double> merge_handle(const std::vector<double> & data) {
-	std::function<std::vector<double>(const std::vector<double> &)> mh = merge_handle;
-	return merge_sort(data, mh);
-}
-
-std::vector<double> insertion_sort(const std::vector<double> & data2, std::function<std::vector<double>(const std::vector<double> &)> & hook) {
+std::vector<double> insertion_sort(const std::vector<double> & data2,
+		Lhyra<std::vector<double>, std::vector<double>, FEATURE_SIZE> & lhyra) {
 	std::vector<double> data{data2};
 	if (data.size() <= 1) return data;
 
@@ -48,7 +48,8 @@ std::vector<double> insertion_sort(const std::vector<double> & data2, std::funct
 	return sorted;
 }
 
-std::vector<double> quick_sort(const std::vector<double> & data2, std::function<std::vector<double>(const std::vector<double> &)> & hook) {
+std::vector<double> quick_sort(const std::vector<double> & data2,
+		Lhyra<std::vector<double>, std::vector<double>, FEATURE_SIZE> & lhyra) {
 	std::vector<double> data{data2};
 	if (data.size() <= 1) return data;
 
@@ -71,15 +72,11 @@ std::vector<double> quick_sort(const std::vector<double> & data2, std::function<
 		sorted[j] = temp;
 	}
 
-	auto sorted_first = hook(std::vector<double>(sorted.begin(), sorted.begin() + pi));
-	auto sorted_second = hook(std::vector<double>(sorted.begin()+pi+1, sorted.begin() + sorted.size()));
+	auto sorted_first = lhyra(std::vector<double>(sorted.begin(), sorted.begin() + pi));
+	auto sorted_second = lhyra(std::vector<double>(sorted.begin()+pi+1, sorted.begin() + sorted.size()));
 
 	sorted_first.push_back(sorted[pi]);
 	sorted_first.insert(sorted_first.end(), sorted_second.begin(), sorted_second.end());
 
 	return sorted_first;
-}
-std::vector<double> quick_handle(const std::vector<double> & data) {
-	std::function<std::vector<double>(const std::vector<double> &)> qh = quick_handle;
-	return quick_sort(data, qh);
 }

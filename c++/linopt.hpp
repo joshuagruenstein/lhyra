@@ -120,6 +120,8 @@ public:
                 
                 totaltimes.back() += this->lhyra->times[0];
                 
+                // std::cout << epoch_choices.size() << ' ' << this->lhyra->times.size() << std::endl;
+
                 for(int i = 0; i < epoch_choices.size(); i++) {
                     features[epoch_choices[i]].push_back(epoch_features[i]);
                     times[epoch_choices[i]].push_back(this->lhyra->times[i]);
@@ -157,7 +159,7 @@ public:
         train(100, 40, true);
     }
     
-    Solver<T, U> & solver(const std::array<double, SIZE> & features) {
+    Solver<T, U, SIZE> & solver(const std::array<double, SIZE> & features) {
         int action;
         if(training && double(rand()) / RAND_MAX < eps) {
             action = rand() % num_solvers;

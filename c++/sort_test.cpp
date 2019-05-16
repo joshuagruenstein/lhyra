@@ -1,11 +1,13 @@
 #include "lhyra.hpp"
 #include "linopt.hpp"
+#include "dummyopt.hpp"
 #include "sorting.hpp"
 
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 
 // Data generator for sorting. Yes, you modify the globals to change the behavior. Sorry.
@@ -39,7 +41,6 @@ std::vector<double> random_list() {
 }
 
 // Feature extractor for sorting
-constexpr int FEATURE_SIZE = 4;
 class SortFeatureExtractor: public FeatureExtractor<std::vector<double>, FEATURE_SIZE> {
 public:
 	SortFeatureExtractor(){}
@@ -87,16 +88,6 @@ Order of initialization:
 
 */
 
-std::vector<double> foo(std::vector<double> i,
-		std::function<std::vector<double>(std::vector<double>)> hook) {
-	if(i.empty()) return std::vector<double>{};
-	double back = i.back();
-	i.pop_back();
-	std::vector<double> answer = hook(i);
-	answer.push_back(back);
-	return answer;
-}
-
 
 int main() {
 
@@ -108,7 +99,7 @@ int main() {
 
 	// Create vector of solvers:
 
-	std::vector<Solver<std::vector<double>, std::vector<double>>> solvers;
+	std::vector<Solver<std::vector<double>, std::vector<double>, FEATURE_SIZE>> solvers;
 	solvers.push_back(&merge_sort);
 	solvers.push_back(&insertion_sort);
 	solvers.push_back(&quick_sort);
@@ -138,7 +129,7 @@ int main() {
 
 	//std::cout << "Checkpoint 1" << std::endl;
 
-	linopt.train();
+	linopt.train(200, 40, true);
 
 	//std::cout << "Checkpoint " << std::endl;
 
@@ -151,6 +142,38 @@ int main() {
 
 	std::ofstream f("data.txt");
 
+	// Create Lhyras for merge, insertion, and quick sort.
+	std::vector<Solver<std::vector<double>, std::vector<double>, FEATURE_SIZE>> merge_solvers;
+	std::vector<Solver<std::vector<double>, std::vector<double>, FEATURE_SIZE>> insert_solvers;
+	std::vector<Solver<std::vector<double>, std::vector<double>, FEATURE_SIZE>> quick_solvers;
+	merge_solvers.push_back(&merge_sort);
+	insert_solvers.push_back(&insertion_sort);
+	quick_solvers.push_back(&quick_sort);
+
+	DummyOptimizer<std::vector<double>, std::vector<double>, FEATURE_SIZE> merge_opt;
+	DummyOptimizer<std::vector<double>, std::vector<double>, FEATURE_SIZE> insert_opt;
+	DummyOptimizer<std::vector<double>, std::vector<double>, FEATURE_SIZE> quick_opt;
+
+	Lhyra<std::vector<double>, std::vector<double>, FEATURE_SIZE> merge_lhyra {
+		merge_solvers,
+		&dg,
+		&sfg,
+		&merge_opt
+	};
+	Lhyra<std::vector<double>, std::vector<double>, FEATURE_SIZE> insert_lhyra {
+		insert_solvers,
+		&dg,
+		&sfg,
+		&insert_opt
+	};
+	Lhyra<std::vector<double>, std::vector<double>, FEATURE_SIZE> quick_lhyra {
+		quick_solvers,
+		&dg,
+		&sfg,
+		&quick_opt
+	};
+
+
 	for(LIST_LENGTH = 16; LIST_LENGTH <= 4096; LIST_LENGTH *= 2) {
 
 		std::cout << "Starting list of length " << LIST_LENGTH << std::endl;
@@ -161,26 +184,30 @@ int main() {
 			lhyra(test_data[i]);
 		}
 	    auto t2 = std::chrono::high_resolution_clock::now();
-	    std::function<std::vector<double>(const std::vector<double> &)> mh = merge_handle;
 		for(int i = 0; i < NUM_DATA; i++) {
-			merge_sort(test_data[i], mh);
+			merge_lhyra(test_data[i]);
 		}
 	    auto t3 = std::chrono::high_resolution_clock::now();
 		for(int i = 0; i < NUM_DATA; i++) {
-			insertion_sort(test_data[i], mh); // Doesn't matter anyway
+			insert_lhyra(test_data[i]); // Doesn't matter anyway
 		}
 	    auto t4 = std::chrono::high_resolution_clock::now();
-	    std::function<std::vector<double>(const std::vector<double> &)> qh = quick_handle;
 		for(int i = 0; i < NUM_DATA; i++) {
-			quick_sort(test_data[i], qh);
+			quick_lhyra(test_data[i]);
 		}
 	    auto t5 = std::chrono::high_resolution_clock::now();
+		for(int i = 0; i < NUM_DATA; i++) {
+			std::vector<double> test_data_copy = test_data[i];
+			std::sort(test_data_copy.begin(), test_data_copy.end());
+		}
+	    auto t6 = std::chrono::high_resolution_clock::now();
 
 	    f << LIST_LENGTH << ' ';
 	    f << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() << ' ';
 	    f << std::chrono::duration_cast<std::chrono::microseconds>(t3 - t2).count() << ' ';
 	    f << std::chrono::duration_cast<std::chrono::microseconds>(t4 - t3).count() << ' ';
-	    f << std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count() << std::endl;
+	    f << std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count() << ' ';
+	    f << std::chrono::duration_cast<std::chrono::microseconds>(t6 - t5).count() << std::endl;
 	}
 
 	f.close();

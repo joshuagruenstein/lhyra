@@ -13,9 +13,9 @@ public:
 template<typename T>
 class DataGenerator: public DataStore<T> {
 private:
-    std::function<T()> method;
+    T(*method)();
 public:    
-    DataGenerator(const std::function<T()> & m) {
+    DataGenerator(T(*m)()) {
         method = m;
     }
     std::vector<T> get_data(int batch_size) {
@@ -39,17 +39,19 @@ public:
     virtual U operator()(const T & t) = 0;
 }*/
 
-template<typename T, typename U>
-using Solver = std::function<U(const T &, std::function<U(const T &)> &)>;
+
+// Early declaration for the compiler
+template<typename T, typename U, unsigned int SIZE> class Lhyra;
+
+
+template<typename T, typename U, unsigned int SIZE>
+using Solver = U(*)(const T &, Lhyra<T, U, SIZE> &);
 
 template<typename T, unsigned int SIZE>
 class FeatureExtractor {
 public:
     virtual std::array<double, SIZE> operator()(const T & t) = 0;
 };
-
-// Early declaration for the compiler
-template<typename T, typename U, unsigned int SIZE> class Lhyra;
 
 /*
 When subclassing Optimizer, Constructor should be basically blank.
@@ -66,7 +68,7 @@ public:
         init();
     }
     virtual void init() = 0;
-    virtual Solver<T, U> & solver(const std::array<double, SIZE> & features) = 0;
+    virtual Solver<T, U, SIZE> & solver(const std::array<double, SIZE> & features) = 0;
 };
 
 // For debugging:
@@ -81,11 +83,11 @@ private:
 public:
     // The optimizer needs to see these:
     DataStore<T> * datastore;
-    std::vector<Solver<T, U>> solvers;
+    std::vector<Solver<T, U, SIZE>> solvers;
     bool vocal;
     std::vector<double> times;
     
-    Lhyra(std::vector<Solver<T, U>> & s,
+    Lhyra(std::vector<Solver<T, U, SIZE>> & s,
               DataStore<T> * ds,
               FeatureExtractor<T, SIZE> * e,
               Optimizer<T, U, SIZE> * o):
@@ -103,6 +105,11 @@ public:
     }
     U operator()(const T & data) {
         
+        size_t index = times.size();
+        times.emplace_back(0);
+
+        // std::cout << this << std::endl;
+
         auto t1 = std::chrono::high_resolution_clock::now();
         
         //std::cout << "Checkpoint 5.1" << std::endl;
@@ -110,12 +117,11 @@ public:
         //std::cout << "Checkpoint 5.2" << std::endl;
         auto solver = optimizer->solver(features);
         //std::cout << "Checkpoint 5.3" << std::endl;
-        std::function<U(const T&)> hook = std::bind(*this, std::placeholders::_1);
-        auto sol = solver(data, hook);
+        auto sol = solver(data, *this);
         
         auto t2 = std::chrono::high_resolution_clock::now();
         
-        times.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count());
+        times[index] = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
         //std::cout << times.back() << std::endl;
         
         return sol;
